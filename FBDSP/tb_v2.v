@@ -84,14 +84,16 @@ module mcmult2_tb;
         if(compare_res) begin
 			#(cycleLength/10);
 			if(sign==0) begin
-				if(model_out == out)
+				if(model_out == out) begin
 					$display("correct");
-				else
+                end else begin
 					$display("error");
+				    error_count = error_count +1;
+                end
 			end else begin
-				if(model_out == out)
+				if(model_out == out) begin
 				    $display("correct");
-				else begin
+                end else begin
 				    $display("error");
 				    error_count = error_count +1;
 			    end
