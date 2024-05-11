@@ -1,13 +1,29 @@
 import sys
 
+
+a_size = int(sys.argv[1])
+b_size = int(sys.argv[2])
+
 verilog_output = open("PPM.v", 'w')
 instance=0
+col_depth = [0]*(a_size+b_size-1)
+
+def get_col_depth(row):
+   global col_depth
+   print(col_depth[row])
+   col_depth[row] += 1
+   return col_depth[row]-1
+
+   
+def reset_depth():
+   global col_depth
+   col_depth= [0]*(a_size+b_size-1)
 
 def FA(instance, a, b, cin, out, cout):
-    verilog_output.write(f"FA FA_{instance} (.a({a}), .b({b}), .cin({cin}), .out({out}), .cout({cout}));\n")
+    verilog_output.write(f"\tFA FA_{instance} (.a({a}), .b({b}), .cin({cin}), .out({out}), .cout({cout}));\n")
 
 def HA(instance, a, b, out, cout):
-    verilog_output.write(f"HA HA_{instance} (.a({a}), .b({b}), .out({out}), .cout({cout}));\n")
+    verilog_output.write(f"\tHA HA_{instance} (.a({a}), .b({b}), .out({out}), .cout({cout}));\n")
 
 def FA_module():
     verilog_output.write("""module FA(input a, input b, input cin, output out, output cout);
@@ -30,10 +46,12 @@ def PartialProductGeneration(a_size, b_size):
     #Generate partial products
     for i in range(a_size):
         for j in range(b_size-1):
-            verilog_output.write(f"\twire stage_0_{str(i)}_{str(j+i)} = a[{str(i)}]&b[{str(j)}];\n")
-        verilog_output.write(f"\twire stage_0_{str(i)}_{str(b_size-1)} = a[{str(i)}]&~b[{str(b_size-1)}];\n")
-        verilog_output.write(f"\twire stage_0_{str(i)}_{str(b_size)} = 1'b1;\n")
-    verilog_output.write("\n")
+            verilog_output.write(f"\twire stage_0_{str(get_col_depth(j+i))}_{str(j+i)} = a[{str(i)}]&b[{str(j)}];\n")
+        verilog_output.write(f"\twire stage_0_{str(get_col_depth(b_size-1+i))}_{str(b_size-1+i)} = a[{str(i)}]&~b[{str(b_size-1)}];\n")
+        verilog_output.write(f"\twire stage_0_{str(get_col_depth(b_size-1+i))}_{str(b_size-1+i)} = 1'b1;\n")
+    #for i in range(a_size):
+    #verilog_output.write("\n")
+    reset_depth()
 
 # Complete this
 #def Reduce(stage, column, rows):
@@ -44,14 +62,6 @@ def PartialProductGeneration(a_size, b_size):
     #else use FA and HA to reduce to 2 rows (can take multiple stages)
 
 def Reduce(stage, column, rows):
-  """
-  Reduces multiple bits in a column to at most 2 bits.
-
-  Args:
-      stage: Current stage of reduction.
-      column: Column index of the bits to be reduced.
-      rows: Number of bits in the current column.
-  """
   global instance
   if rows == 1:
     # Single bit, use wire and assign directly
@@ -111,8 +121,6 @@ def AssignOutputs(last_stage, a_size, b_size):
 
 
 
-a_size = int(sys.argv[1])
-b_size = int(sys.argv[2])
 
 # Create Module and declare ports
 verilog_output.write(f"module mult(input [{str(a_size-1)}:0] a, input [{str(b_size-1)}:0] b, output [{str(a_size+b_size-1)}:0] result1, output [{str(a_size+b_size-1)}:0] result2);\n\n")
