@@ -30,19 +30,9 @@ PP::PP(int i,int j)
   this->j = j;
 }
 
-string PP::print(string lang = "vhdl")
+string PP::print(string lang = "")
 {
   string out = "";
-  if (lang.compare("vhdl") == 0)
-  {
-    if (this->i>=0 && this->j>=0)
-      out = "P("+to_string(this->i)+")("+to_string(this->j)+")";
-    if (this->i>=0 && this->j<0)
-      out = "S("+to_string(this->i)+")";
-    if (this->i<0 && this->j>=0)
-      out = "C("+to_string(this->j)+")";
-  }
-  else
   {
     if (this->i>=0 && this->j>=0)
       out = "P["+to_string(this->i)+"]["+to_string(this->j)+"]";
@@ -78,22 +68,9 @@ ADD::ADD(string a,string b,string cin,string s,string cout,int type)
   this->type = type;
 }
 
-string ADD::Print(int id,string lang = "vhdl")
+string ADD::Print(int id,string lang )
 {
   stringstream adder;
-  if (lang.compare("vhdl") == 0)
-  {
-    if (this->type==0)
-    {
-      adder << "  HA_"<< format_account_number(id) <<" : ha port map ("<<this->a<<","<<this->b<<","<<this->s<<","<<this->cout<<");";
-    }
-    else if (this->type==1)
-    {
-      adder << "  FA_"<< format_account_number(id) <<" : fa port map ("<<this->a<<","<<this->b<<","<<this->cin<<","<<this->s<<","<<this->cout<<");";
-    }
-  }
-  else
-  {
     if (this->type==0)
     {
       adder << "  ha HA_"<< format_account_number(id) <<" ("<<this->a<<","<<this->b<<","<<this->s<<","<<this->cout<<");";
@@ -102,7 +79,6 @@ string ADD::Print(int id,string lang = "vhdl")
     {
       adder << "  fa FA_"<< format_account_number(id) <<" ("<<this->a<<","<<this->b<<","<<this->cin<<","<<this->s<<","<<this->cout<<");";
     }
-  }
   return adder.str();
 }
 
@@ -606,13 +582,20 @@ void verilog_code_generation_schema(int type,int N, int M)
   outfile << "  wire [" << to_string(AMOUNT-1) << " : 0] S;" << endl;
   outfile << "  wire [" << to_string(AMOUNT-1) << " : 0] C;" << endl;
   outfile << endl;
-  for (i=0; i<N; i++)
+  for (i=0; i<N-1; i++)
   {
-    for (j=0; j<M; j++)
+    for (j=0; j<M-1; j++)
     {
-      outfile << "  assign P["<<i<<"]["<<j<<"] = x["<<i<<"] & y["<<j<<"];" << endl;
+      outfile << "  assign P["<<i<<"]["<<j<<"] = (x["<<i<<"] & y["<<j<<"]);" << endl;
     }
+    outfile << "  assign P["<<i<<"]["<<j<<"] = ~(x["<<i<<"] & y["<<j<<"]);" << endl;
   }
+  for (j=0; j<M-1; j++)
+    {
+      outfile << "  assign P["<<i<<"]["<<j<<"] = ~(x["<<i<<"] & y["<<j<<"]);" << endl;
+    }
+  outfile << "  assign P["<<i<<"]["<<j<<"] = (x["<<i<<"] & y["<<j<<"]);" << endl;
+
   outfile << endl;
   for (auto v : Adders)
   {

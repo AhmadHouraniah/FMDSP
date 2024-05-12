@@ -1,31 +1,36 @@
 module tb();
 
-reg signed [3 : 0] a, b;
+    parameter N = 16;
+    parameter M = 16;
+    parameter mult = 0;
+    reg signed [N-1:0] a;
+    reg signed [M-1:0] b;
 
-wire signed [7 : 0]  res1, res2, res;
-assign res =res1+res2+ 8'b0000_1000;
-dadda dadda(.x(a), .y(b), .z0(res1), .z1(res2));
 
-initial begin
-    $dumpvars;
-    a = 0;
-    b = 0;
-    # 10;
-    $display("a: %d, b: %d, out: %d", a, b, res);
+    wire signed [M+N-1 : 0]  res1, res2, res;
+    assign res =res1+res2;
+    mult #(N, M, 1) dut (.a(a), .b(b), .out1(res1), .out2(res2));
 
-    a=10;
-    b=10;
-    #10;
+    initial begin
+        $dumpvars;
+        a = -15;
+        b = 3;
+        # 10;
+        $display("a: %d, b: %d, out: %d", a, b, res);
 
-    $display("a: %d, b: %d, out: %d", a, b, res);
+        a=-10;
+        b=10;
+        #10;
 
-    a=3;
-    b=7;
-    #10;
+        $display("a: %d, b: %d, out: %d", a, b, res);
 
-    $display("a: %d, b: %d, out: %d", a, b, res);
+        a=3;
+        b=7;
+        #10;
 
-    $finish;
-end
+        $display("a: %d, b: %d, out: %d", a, b, res);
+
+        $finish;
+    end
 
 endmodule
