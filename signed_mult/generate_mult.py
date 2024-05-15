@@ -1,6 +1,5 @@
 import sys
 
-
 a_size = int(sys.argv[1])
 b_size = int(sys.argv[2])
 
@@ -8,12 +7,18 @@ verilog_output = open("PPM.v", 'w')
 instance=0
 col_depth = [0]*(a_size+b_size-1)
 
+def num_levels_wallace_tree(n):
+  if n <= 2:
+    return n
+  levels = 1 + num_levels_wallace_tree((n + 1) // 2)
+  return levels
+
+
 def get_col_depth(row):
    global col_depth
    print(col_depth[row])
    col_depth[row] += 1
    return col_depth[row]-1
-
    
 def reset_depth():
    global col_depth
@@ -49,8 +54,6 @@ def PartialProductGeneration(a_size, b_size):
             verilog_output.write(f"\twire stage_0_{str(get_col_depth(j+i))}_{str(j+i)} = a[{str(i)}]&b[{str(j)}];\n")
         verilog_output.write(f"\twire stage_0_{str(get_col_depth(b_size-1+i))}_{str(b_size-1+i)} = a[{str(i)}]&~b[{str(b_size-1)}];\n")
         verilog_output.write(f"\twire stage_0_{str(get_col_depth(b_size-1+i))}_{str(b_size-1+i)} = 1'b1;\n")
-    #for i in range(a_size):
-    #verilog_output.write("\n")
     reset_depth()
 
 # Complete this
@@ -61,7 +64,7 @@ def PartialProductGeneration(a_size, b_size):
     #if 3 bits but column position is less than half of a_size+b_size, use HA and assign remaining bit to next stage
     #else use FA and HA to reduce to 2 rows (can take multiple stages)
 
-def Reduce(stage, column, rows):
+def Reduce(stage, column, rows, flag):
   global instance
   if rows == 1:
     # Single bit, use wire and assign directly
@@ -94,6 +97,7 @@ def Reduce(stage, column, rows):
 #Change this as necessary
 def PartialProductReduction(a_size, b_size):
     stage = 0
+    stages = max(count_bits_in_columns(a_size, b_size))/3
     for i in range(len(count_bits_in_columns(a_size, b_size))):
         Reduce(stage, i, count_bits_in_columns(a_size, b_size)[i])
             
@@ -118,9 +122,6 @@ def AssignOutputs(last_stage, a_size, b_size):
   
   verilog_output.write(f"\tassign result1 = {{{res1_string}}};\n")
   verilog_output.write(f"\tassign result2 = {{{res2_string}}};\n")
-
-
-
 
 # Create Module and declare ports
 verilog_output.write(f"module mult(input [{str(a_size-1)}:0] a, input [{str(b_size-1)}:0] b, output [{str(a_size+b_size-1)}:0] result1, output [{str(a_size+b_size-1)}:0] result2);\n\n")
