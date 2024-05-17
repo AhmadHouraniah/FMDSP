@@ -1,4 +1,4 @@
-module compressor(in1, in2, in3, out1, out2);
+module compressor32(in1, in2, in3, out1, out2);
    parameter NN=16;
 
    input [NN-1:0] in1, in2, in3;
@@ -12,4 +12,16 @@ module compressor(in1, in2, in3, out1, out2);
       end
       out1[NN] = 1'b0;
    end
+endmodule
+
+
+module compressor42(in1, in2, in3, in4, out1, out2);
+   parameter NN=16;
+
+   input [NN-1:0] in1, in2, in3;
+   output reg [NN:0] out1, out2;
+   wire reg [NN:0] l1, l2;
+
+   compressor32 #(NN) comp1 (in1, in2, in3, l1, l2);
+   compressor32 #(NN) comp2 (l1, l2, in4, out1, out2);
 endmodule

@@ -13,6 +13,6 @@ module mult(a, b, out1, out2);
         else
             dadda mult_dadda(.x(a), .y(b), .z0(res1), .z1(res2));
     endgenerate
-    compressor  #(N+M) mult_comp(.in1(res1), .in2(res2), .in3(sign_bits), .out1({nc, out1}), .out2({nc, out2}));
+    compressor32  #(N+M) mult_comp(.in1(res1), .in2(res2), .in3(sign_bits), .out1({nc, out1}), .out2({nc, out2}));
 
 endmodule
