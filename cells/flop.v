@@ -17,13 +17,12 @@ module flop_reset(clk, in, reset, out);
 
    input clk, reset;
    input [NN-1:0] in;
-   output reg [NN-1:0] out;
-
-   always @(posedge clk and posedge reset) begin
-      if(reset)
-         out <= #1 0;
-      else
-         out <= #1 in;
+   output [NN-1:0] out;
+   reg [NN-1:0] data;
+   assign out = reset? 0 : data;
+   
+   always @(posedge clk) begin
+      data <= #1 in;
    end
 
 endmodule

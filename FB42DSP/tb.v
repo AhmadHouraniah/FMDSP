@@ -21,6 +21,7 @@ module mcmult2_tb;
 	reg start;
 	reg [n-1:0] aa;
 	reg [m-1:0] bb;
+	reg [n+m-1:0] cc;
 
     wire compare_res;
 
@@ -33,11 +34,14 @@ module mcmult2_tb;
 	// Instantiate the Unit Under Test (UUT)
     wire [31:0] nc;
     
-	wrapper #(n,m, pipes, 1, mult)	uut (
+	DSP_top #(n,m, pipes, 1, mult)	uut (
 	.clk(clk),
 	.start(start),
 	.mode(mode),
-	.out({out}),
+	.out(out),
+	.barrel_shifter(2'b0),
+	.mac(1'b0),
+	.cc(cc),
 	.aa(aa),
 	.bb(bb)
 	);
@@ -46,7 +50,10 @@ module mcmult2_tb;
 	.clk(clk),
 	.start(start),
 	.mode(mode),
+	.barrel_shifter(2'b0),
+	.mac(1'b0),
 	.out(model_out),
+	.cc(cc),
 	.aa(aa),
 	.bb(bb),
     .compare_res(compare_res)
@@ -60,6 +67,7 @@ module mcmult2_tb;
 
 	initial begin
 		$dumpvars;
+		cc = 0;
 		mode=0;
 		clk = 0;
 		start <= 0;
@@ -70,14 +78,15 @@ module mcmult2_tb;
 
 		mode=0;
 		for(ii=0; ii<testCount; ii=ii+1) begin
-			#cycleLength;
 			start =1;
 			aa[8:5] = 4'b0;
 			bb[8:5] = 4'b0;
 			aa[4:0] = $random;
 			bb[4:0] = $random;
+			#cycleLength;
 			//start = 0;
 		end
+		start = 0;
 		#100;
 		if(error_count == 0)
 			$display("Mode 1 Passed");
@@ -88,13 +97,13 @@ module mcmult2_tb;
 		
 		mode=1;
 		for(ii=0; ii<testCount; ii=ii+1) begin
-			#cycleLength;
 			start =1;
 			aa[8:5] = 4'b0;
 			aa[4:0] = $random;
 			bb = $random;
 			#cycleLength;
 			start = 0;
+			#cycleLength;
 			
 		end
 		#100;
@@ -115,14 +124,9 @@ module mcmult2_tb;
 	wire [14:0] mode_2_model_out = model_out[14:0];
 	
     always@(posedge clk) begin
-        if(compare_res) begin
-			#(cycleLength/10);
-			if(model_out == out) begin
-				    $display("correct");
-            end else begin
-			    error_count = error_count +1;
-			end
-		end 
+        if(compare_res) 
+			if(model_out != out) 
+				error_count = error_count +1;
     end
 
 endmodule

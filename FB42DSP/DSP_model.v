@@ -23,7 +23,7 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 
 	reg signed [N+M-1:0] res0;
 
-    assign compare_res = ~mode[1]&~mode[0]&start | ~mode[1]&mode[0]&start_r1| mode[1]&~mode[0]&start_r3;
+    assign compare_res = (~mode[1]&~mode[0]&start) | (~mode[1]&mode[0]&start_r1)| (mode[1]&~mode[0]&start_r3);
 	
     always@* begin
 		out = outPrev;
@@ -39,6 +39,14 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 				out = 0;
 		end
 		else if (mode ==2'b01) begin
+			if(start) begin
+				res0 =  $signed(aa[N2 :0])*$signed(bb[M2 :0]) ;
+				if(mac)
+					out = res0 + { {N+M{outPrev[N+M-1]}}, outPrev>>barrel_shifter };
+				else
+					out = res0 + cc;
+			end
+			else
 			if(start_r1) begin
 				res0 = $signed(aa[N2:0])*$signed(bb[M -1 :0]);
 				if(mac) 
