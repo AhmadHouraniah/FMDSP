@@ -40,7 +40,7 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 		end
 		else if (mode ==2'b01) begin
 			if(start) begin
-				res0 =  $signed(aa[N2 :0])*$signed(bb[M2 :0]) ;
+				res0 =  $signed(aa[N2 :0])*$signed({1'b0, bb[M2-1 :0]}) ;
 				if(mac)
 					out = res0 + { {N+M{outPrev[N+M-1]}}, outPrev>>barrel_shifter };
 				else

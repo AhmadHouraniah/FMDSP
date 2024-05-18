@@ -23,6 +23,49 @@ module DSP_top(clk, start, aa, bb, cc, barrel_shifter, mode, out, mac);
 
     wire [N/2 + M/2 + 1:0] mult;
     
+    reg [N2:0] mult_in1;
+    reg [M2:0] mult_in2;
+     
+    reg [3:0] shift_val;
+
+    always@*begin
+        shift_val = 0;
+        case(mode)
+            0: begin
+                mult_in1 = aa[N2:0];
+                mult_in2 = bb[M2:0];
+            end
+            1: begin
+                mult_in1 = aa[N2:0];
+                if(start) begin
+                    mult_in2 = {1'b0,bb[N2-1:0]};
+                end
+                else begin
+                    shift_val = N2;
+                    mult_in2 = {bb[M-1], bb[M-1:M2]};
+                end
+            end
+            2: begin
+                if(start) begin
+                    mult_in1 = {1'b0, aa[N2-1:0]};
+                    mult_in2 = {1'b0,bb[M2-1:0]};
+                end else if(start_r1) begin
+                    shift_val = N2;
+                    mult_in1 = {1'b0, aa[N2-1:0]};
+                    mult_in2 = {bb[M-1], bb[M-1:M2]};
+                end else if(start_r2) begin
+                    shift_val = N2;
+                    mult_in1 = {aa[N-1], aa[N-1:N2]};
+                    mult_in2 = {1'b0,bb[M2-1:0]};
+                end else begin
+                    shift_val = N2*2;
+                    mult_in1 = {aa[N-1], aa[N-1:N2]};
+                    mult_in2 = {bb[M-1], bb[M-1:M2]};
+                end 
+            end
+        endcase       
+    end
+    /*
     wire [N2:0] mult_in1 = 
         ~mode[1]? aa[N2:0]
         : (start|start_r1)? {1'b0, aa[N2-1:0]} : {aa[N-1], aa[N-1:N2]};
@@ -31,21 +74,12 @@ module DSP_top(clk, start, aa, bb, cc, barrel_shifter, mode, out, mac);
           ~mode[1]&~mode[0]? bb[N2:0]
         : ~mode[1]&mode[0]? start? {1'b0,bb[N2-1:0]} : {bb[N-1], bb[N-1:N2]}
         : start | start_r2? {1'b0,bb[M2-1:0]} : {bb[M-1], bb[M-1:M2]};
-
+    */
     wire [N2+M2+2:0] mult_out1, mult_out2;
 
     PPM #(N2+1, M2+1, PPM_type) PPM (.a(mult_in1), .b(mult_in2), .out1(mult_out1), .out2(mult_out2));
 
-    reg [3:0] shift_val;
-    always @* begin
-        shift_val = 0;
-        if(start_r1)
-            if(mode == 1)
-                shift_val = N2;
-        else if(start_r3)
-            if(mode==2)
-                shift_val = N2*2;
-    end
+
 //    = (start_r1|start_r2)&~mode[1]&mode[0]*N2/2 + (start_r3 & mode == 2)*N2 ; // is this inefficient? 0 for c1, 2 for c2 and c3, 4 for c4
 
     wire [N+M-1:0] comp_in1 =  { {N+M-1{1'b1}},mult_out1[N2+M2+1:0] << shift_val};
