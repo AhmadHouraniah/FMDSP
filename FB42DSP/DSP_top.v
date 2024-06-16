@@ -1,10 +1,16 @@
-module DSP_top(clk, start, aa, bb, cc, barrel_shifter, mode, out, mac, mac_start);
+module DSP_top(clk, start, aa, bb, cc, shift_amount, shift_dir, mode, out, mac, mac_start,  pipe_stages);
     parameter N = 16;
         localparam N2 = N/2;
     parameter M = 16;
         localparam M2 = M/2;
     parameter PPM_type = 0; //0: wallace, 1: dadda
-    input [1:0] barrel_shifter;
+
+    parameter SHIFT_BITS = 2;
+
+
+    input [1:0] pipe_stages;
+    input [1:0] shift_amount;
+    input shift_dir;
     input [N-1:0] aa;
     input [M-1:0] bb;
     input mac_start;
@@ -78,11 +84,13 @@ module DSP_top(clk, start, aa, bb, cc, barrel_shifter, mode, out, mac, mac_start
 
     wire [N+M-1:0] comp_in2 =  mult_out2[N2+M2+1:0]<< shift_val;
 
-    wire [N+M-1:0] comp_in3 =  start? mac&mac_prev? {{2{comp_out1_r1[N+M-1]}},comp_out1_r1  }>> barrel_shifter : cc : comp_out1_r1 ;
+    wire [N+M-1:0] comp_in3 =  start? mac&mac_prev? shifted_comp_out1_r1: cc : comp_out1_r1 ;
 
-    wire [N+M-1:0] comp_in4 =  start? mac&mac_prev? {{2{comp_out2_r1[N+M-1]}},comp_out2_r1  }>> barrel_shifter : 0 : comp_out2_r1;
+    wire [N+M-1:0] comp_in4 =  start? mac&mac_prev?  shifted_comp_out2_r1: 0 : comp_out2_r1;
     
-    wire [N+M-1:0] comp_out1, comp_out2, comp_out1_r1, comp_out2_r1;
+    wire [N+M-1:0] comp_out1, comp_out2, comp_out1_r1, comp_out2_r1, shifted_comp_out1_r1, shifted_comp_out2_r1;
+    barrel_shifter #(N+M, SHIFT_BITS) barrel_shifter1(.data_in(comp_out1_r1), .shift_amount(shift_amount), .direction(shift_dir), .data_out(shifted_comp_out1_r1));
+    barrel_shifter #(N+M, SHIFT_BITS) barrel_shifter2(.data_in(comp_out2_r1), .shift_amount(shift_amount), .direction(shift_dir), .data_out(shifted_comp_out2_r1));
 
     flop_reset #(N+M) flop_comp_out1_r1 (.in(comp_out1), .reset(1'b0), .clk(clk), .out(comp_out1_r1));
     flop_reset #(N+M) flop_comp_out2_r1 (.in(comp_out2), .reset(1'b0), .clk(clk), .out(comp_out2_r1));

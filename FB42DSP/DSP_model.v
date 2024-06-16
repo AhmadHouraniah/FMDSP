@@ -47,7 +47,7 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 			end
 		end
 		else if(mode == 2'b10) begin
-			if(start_r3) begin
+			if(start) begin
 				res0 = $signed(aa[N-1:0])*$signed(bb[M-1:0]);
 				if(mac&mac_prev)
                     out = res0 + ({{(N+M){outPrev[N+M-1]}}, outPrev} >> barrel_shifter);

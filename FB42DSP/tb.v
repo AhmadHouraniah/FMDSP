@@ -38,12 +38,14 @@ module mcmult2_tb;
     wire [31:0] nc;
     
 	reg mac;
-	DSP_top #(N,M, PIPES, MULT)	uut (
+
+	DSP_top #(N,M, PIPES, mult, 2)	uut (
 	.clk(clk),
 	.start(start),
 	.mode(mode),
 	.out(out),
-	.barrel_shifter(barrel_shifter),
+	.shift_amount(barrel_shifter),
+	.shift_dir(1'b1),
 	.mac(mac),
 	.cc(cc),
 	.aa(aa),
@@ -95,9 +97,10 @@ module mcmult2_tb;
 
 		mode=0;
 		mac=1;
-		barrel_shifter = 2;
+		
 		for(ii=0; ii<testCount; ii=ii+1) begin
 			start =1;
+			//barrel_shifter = $random;
 			aa[N:N2+1] = {N2{aa[N2]}};
 			bb[N:N2+1] = {N2{bb[N2]}};
 			aa[N2:0] = $random;
@@ -115,6 +118,7 @@ module mcmult2_tb;
 		
 		mac=0;
 		mode=1;
+		barrel_shifter = 0;
 		for(ii=0; ii<testCount; ii=ii+1) begin
 			start =1;
 			aa[N2:0] = $random;
@@ -155,6 +159,7 @@ module mcmult2_tb;
 		error_count = 0;
 
 		mac = 0;
+		barrel_shifter = 0;
 		mode=2;
 		for(ii=0; ii<testCount; ii=ii+1) begin
 			start =1;
@@ -178,6 +183,7 @@ module mcmult2_tb;
 		mode=2;
 		for(ii=0; ii<testCount; ii=ii+1) begin
 			start =1;
+			//barrel_shifter = $random;
 			aa = $random;
 			bb = $random;
 			#cycleLength;
