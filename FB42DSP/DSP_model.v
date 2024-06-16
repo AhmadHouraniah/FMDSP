@@ -5,10 +5,9 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 	parameter M = 9;
 		localparam M2 = M/2;
 	parameter pipes = 0;
-	parameter initiationInterval = 4;
 	parameter mult = 0;
 	input clk, start;
-    output compare_res;
+    output reg compare_res;
 	input [1:0] mode;
 	input mac;
 	input [1:0] barrel_shifter;
@@ -18,14 +17,14 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 
 	output reg signed [N+M-1:0] out;
 
-	reg [N+M-1:0] outPrev;
+	reg signed [N+M-1:0] outPrev;
 	reg start_r1, start_r2, start_r3, start_r4, start_r5;
 
 	reg signed [N+M-1:0] res0;
 
-    assign compare_res = (~mode[1]&~mode[0]&start) | (~mode[1]&mode[0]&start_r1)| (mode[1]&~mode[0]&start_r3);
 	
     always@* begin
+		compare_res =  (~mode[1]&~mode[0]&start) | (~mode[1]&mode[0]&start_r1)| (mode[1]&~mode[0]&start_r3);
 		out = outPrev;
 		if(mode == 2'b00) begin
 			if(start) begin
