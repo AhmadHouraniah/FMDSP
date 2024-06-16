@@ -78,20 +78,21 @@ module DSP_top(clk, start, aa, bb, cc, barrel_shifter, mode, out, mac, mac_start
 
     wire [N+M-1:0] comp_in2 =  mult_out2[N2+M2+1:0]<< shift_val;
 
-    wire [N+M-1:0] comp_in3 =  start? mac? {{2{comp_out1_r1[N2+M2+2]}},comp_out1_r1  >> barrel_shifter} : 0 : comp_out1_r1 ;
+    wire [N+M-1:0] comp_in3 =  start? mac&mac_prev? {{2{comp_out1_r1[N+M-1]}},comp_out1_r1  }>> barrel_shifter : cc : comp_out1_r1 ;
 
-    wire [N+M-1:0] comp_in4 =  start? mac? {{2{comp_out2_r1[N2+M2+2]}},comp_out2_r1  >> barrel_shifter} : 0 : comp_out2_r1;
+    wire [N+M-1:0] comp_in4 =  start? mac&mac_prev? {{2{comp_out2_r1[N+M-1]}},comp_out2_r1  }>> barrel_shifter : 0 : comp_out2_r1;
     
     wire [N+M-1:0] comp_out1, comp_out2, comp_out1_r1, comp_out2_r1;
 
-    flop_reset #(N+M) flop_comp_out1_r1 (.in(comp_out1), .reset(mac&~mac_prev), .clk(clk), .out(comp_out1_r1));
-    flop_reset #(N+M) flop_comp_out2_r1 (.in(comp_out2), .reset(mac&~mac_prev), .clk(clk), .out(comp_out2_r1));
+    flop_reset #(N+M) flop_comp_out1_r1 (.in(comp_out1), .reset(1'b0), .clk(clk), .out(comp_out1_r1));
+    flop_reset #(N+M) flop_comp_out2_r1 (.in(comp_out2), .reset(1'b0), .clk(clk), .out(comp_out2_r1));
 
     compressor42 #(N+M) comp ( comp_in1, comp_in2, comp_in3, comp_in4, {nc,comp_out1}, {nc,comp_out2});
 
     final_addition #(N+M, 2) adder (.clk(clk), .in1(comp_out1), .in2(comp_out2), .pipes(2'b0), .out(out));
 
 endmodule
+
 
 
 

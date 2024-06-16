@@ -21,6 +21,7 @@ module mcmult2_tb;
 	reg [1:0] mode;
 	reg clk;
 	reg start;
+	reg [1:0] barrel_shifter;
 	reg [N-1:0] aa;
 	reg [M-1:0] bb;
 	reg [N+M-1:0] cc;
@@ -42,7 +43,7 @@ module mcmult2_tb;
 	.start(start),
 	.mode(mode),
 	.out(out),
-	.barrel_shifter(2'b0),
+	.barrel_shifter(barrel_shifter),
 	.mac(mac),
 	.cc(cc),
 	.aa(aa),
@@ -53,7 +54,7 @@ module mcmult2_tb;
 	.clk(clk),
 	.start(start),
 	.mode(mode),
-	.barrel_shifter(2'b0),
+	.barrel_shifter(barrel_shifter),
 	.mac(mac),
 	.out(model_out),
 	.cc(cc),
@@ -73,7 +74,7 @@ module mcmult2_tb;
 		start <= 0;
 		aa <= 0;
 		bb <= 0;
-
+		barrel_shifter = 0;
 		#216;
 		mode=0;
 		for(ii=0; ii<testCount; ii=ii+1) begin
@@ -83,7 +84,6 @@ module mcmult2_tb;
 			aa[N2:0] = $random;
 			bb[N2:0] = $random;
 			#cycleLength;
-			//start = 0;
 		end
 		start = 0;
 		#100;
@@ -95,6 +95,7 @@ module mcmult2_tb;
 
 		mode=0;
 		mac=1;
+		barrel_shifter = 2;
 		for(ii=0; ii<testCount; ii=ii+1) begin
 			start =1;
 			aa[N:N2+1] = {N2{aa[N2]}};

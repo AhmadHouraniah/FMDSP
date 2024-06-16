@@ -14,7 +14,7 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 	input [N-1:0] aa;
 	input [M-1:0] bb;
 	input [N+M-1:0] cc;
-
+	reg mac_prev;
 	output reg signed [N+M-1:0] out;
 
 	reg signed [N+M-1:0] outPrev;
@@ -29,8 +29,8 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 		if(mode == 2'b00) begin
 			if(start) begin
 				res0 =  $signed(aa[N2 :0])*$signed(bb[M2 :0]) ;
-				if(mac)
-					out = res0 + { {N+M{outPrev[N+M-1]}}, outPrev>>barrel_shifter };
+				if(mac&mac_prev)
+                    out = res0 + ({{(N+M){outPrev[N+M-1]}}, outPrev} >> barrel_shifter);
 				else
 					out = res0 + cc;
 			end
@@ -39,17 +39,9 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 		end
 		else if (mode ==2'b01) begin
 			if(start) begin
-				res0 =  $signed(aa[N2 :0])*$signed({1'b0, bb[M2-1 :0]}) ;
-				if(mac)
-					out = res0 + { {N+M{outPrev[N+M-1]}}, outPrev>>barrel_shifter };
-				else
-					out = res0 + cc;
-			end
-			else
-			if(start_r1) begin
 				res0 = $signed(aa[N2:0])*$signed(bb[M -1 :0]);
-				if(mac) 
-					out = res0 + { {N+M{outPrev[N+M-1]}}, outPrev>>barrel_shifter };
+				if(mac&mac_prev) 
+                    out = res0 + ({{(N+M){outPrev[N+M-1]}}, outPrev} >> barrel_shifter);
 				else
 					out = res0 + cc;
 			end
@@ -57,8 +49,8 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
 		else if(mode == 2'b10) begin
 			if(start_r3) begin
 				res0 = $signed(aa[N-1:0])*$signed(bb[M-1:0]);
-				if(mac)
-					out = res0 + { {N+M{outPrev[N+M-1]}}, outPrev>>barrel_shifter };
+				if(mac&mac_prev)
+                    out = res0 + ({{(N+M){outPrev[N+M-1]}}, outPrev} >> barrel_shifter);
 				else
 					out = res0 + cc;
 			end
@@ -66,6 +58,7 @@ module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare
     end
 
 	always@(posedge clk) begin
+		mac_prev <= mac;
 		outPrev <= out;
 		start_r1 <= start;
 		start_r2 <= start_r1;
