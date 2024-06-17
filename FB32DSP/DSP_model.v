@@ -1,50 +1,67 @@
-module DSP_model(clk, start, mode, aa, bb, out, compare_res);
+module DSP_model(clk, start, mode, aa, bb, cc, mac, out, barrel_shifter, compare_res);
 
-	parameter n = 9;
-	parameter m = 9;
+	parameter N = 9;
+		localparam N2 = N/2;
 	parameter pipes = 0;
-	parameter initiationInterval = 4;
 	parameter mult = 0;
 	input clk, start;
-    output compare_res;
+    output reg compare_res;
 	input [1:0] mode;
-	input [n-1:0] aa;
-	input [m-1:0] bb;
-	output [m+n-1:0] out;
+	input mac;
+	input [1:0] barrel_shifter;
+	input [N-1:0] aa;
+	input [N-1:0] bb;
+	input [N+N-1:0] cc;
+	reg mac_prev;
+	output reg signed [N+N-1:0] out;
 
-	wire [n-1:0] aa_r;
-	wire [m-1:0] bb_r;
-	wire start_r1, start_r2, start_r3, start_r4, start_r5;
-	wire [1:0] mode_r;
-	reg [m+n-1:0] out_w;
-	wire [m+n-1:0] out_w2;
+	reg signed [N+N-1:0] outPrev;
+	reg start_r1, start_r2, start_r3, start_r4, start_r5;
 
-	flop #(1) start1_f (.in(start), .clk(clk), .out(start_r1));
-	flop #(1) start2_f (.in(start_r1), .clk(clk), .out(start_r2));
-	flop #(1) start3_f (.in(start_r2), .clk(clk), .out(start_r3));
-	flop #(1) start4_f (.in(start_r3), .clk(clk), .out(start_r4));
-	flop #(1) start5_f (.in(start_r4), .clk(clk), .out(start_r5));
-	flop #(2) mode_f (.in(mode), .clk(clk), .out(mode_r));
-	flop #(n) aa_f (.in(aa), .clk(clk), .out(aa_r));
-	flop #(m) bb_f (.in(bb), .clk(clk), .out(bb_r));
-	flop #(m+n) out1_f (.in(out_w), .clk(clk), .out(out_w2));
-	flop #(m+n) out2_f (.in(out_w2), .clk(clk), .out(out));
+	reg signed [N+N-1:0] res0;
 
-    assign compare_res =start_r2| start_r3| start_r5;
-
-	wire [9:0] out_0 = out_w[9:0];
-	wire [14:0] out_1 = out_w[14:0];
 	
     always@* begin
-		out_w = {m+n{1'b0}};
-		if(mode_r == 2'b00)
-			if(start_r1)
-				out_w[9:0] = $signed(aa[4 :0])*$signed(bb[4 :0]);
-		else if (mode_r ==2'b01)
-			out_w[14:0] = $signed(aa[4:0])*$signed(bb[8 :0]);
-		else
-			out_w = $signed(aa[n-1:0])*$signed(bb[m-1:0]);
+		compare_res =  (~mode[1]&~mode[0]&start) | (~mode[1]&mode[0]&start_r1)| (mode[1]&~mode[0]&start_r3);
+		out = outPrev;
+		if(mode == 2'b00) begin
+			if(start) begin
+				res0 =  $signed(aa[N2 :0])*$signed(bb[N2 :0]) ;
+				if(mac&mac_prev)
+                    out = res0 + ({{(N+N){outPrev[N+N-1]}}, outPrev} >> barrel_shifter);
+				else
+					out = res0 + cc;
+			end
+			else
+				out = 0;
+		end
+		else if (mode ==2'b01) begin
+			if(start) begin
+				res0 = $signed(aa[N2:0])*$signed(bb[N -1 :0]);
+				if(mac&mac_prev) 
+                    out = res0 + ({{(N+N){outPrev[N+N-1]}}, outPrev} >> barrel_shifter);
+				else
+					out = res0 + cc;
+			end
+		end
+		else if(mode == 2'b10) begin
+			if(start) begin
+				res0 = $signed(aa[N-1:0])*$signed(bb[N-1:0]);
+				if(mac&mac_prev)
+                    out = res0 + ({{(N+N){outPrev[N+N-1]}}, outPrev} >> barrel_shifter);
+				else
+					out = res0 + cc;
+			end
+		end
     end
+
+	always@(posedge clk) begin
+		mac_prev <= mac;
+		outPrev <= out;
+		start_r1 <= start;
+		start_r2 <= start_r1;
+		start_r3 <= start_r2;
+	end
 
 endmodule
 
