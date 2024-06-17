@@ -3,14 +3,12 @@
 module mcmult2_tb;
 
 	parameter N = `N;
-	parameter M = `M;
 	parameter PIPES = `PIPES;
 	//only works for 2 and 3, requires modifications for larger intervals
 	//0:wallace, 1:dadda
 	parameter mult = `MULT;
 	
     localparam N2 = N/2;
-    localparam M2 = M/2;
 
 	parameter testCount = 200;
 	parameter clkLength = 5;
@@ -23,23 +21,23 @@ module mcmult2_tb;
 	reg start;
 	reg [1:0] barrel_shifter;
 	reg [N-1:0] aa;
-	reg [M-1:0] bb;
-	reg [N+M-1:0] cc;
+	reg [N-1:0] bb;
+	reg [N+N-1:0] cc;
 
     wire compare_res;
 
 	// Outputs
-	wire [M+N-1:0] out;
+	wire [N+N-1:0] out;
 
 	integer ii;
-	wire [M+N-1:0] model_out;
+	wire [N+N-1:0] model_out;
 
 	// Instantiate the Unit Under Test (UUT)
     wire [31:0] nc;
     
 	reg mac;
 
-	DSP_top #(N,M, PIPES, mult, 2)	uut (
+	DSP_top #(N, PIPES, mult, 2)	uut (
 	.clk(clk),
 	.start(start),
 	.mode(mode),
@@ -52,7 +50,7 @@ module mcmult2_tb;
 	.bb(bb)
 	);
 
-	DSP_model #(N,M, PIPES, mult)	model (
+	DSP_model #(N,PIPES, mult)	model (
 	.clk(clk),
 	.start(start),
 	.mode(mode),

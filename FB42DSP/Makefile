@@ -1,8 +1,8 @@
 #make simulate N=16 M=16
 
 # Default values for N and M
-N ?= 9
-M ?= 9
+N ?= 33
+M ?= 33
 
 # Calculating N2 and M2 as N/2 + 1 and M/2 + 1
 N2 := $(shell echo $$(($(N)/2 + 1)))
