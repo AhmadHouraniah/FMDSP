@@ -9,7 +9,7 @@ The DSP supports the following operations:
 - **1-cycle Operations:**
   - N/2 x N/2 + 2N Multiply-Add
   - N/2 x N/2 Multiply-Accumulate
-  - 2N Accumulate
+  - N bit Accumulate
 
 - **2-cycle Operations:**
   - N/2 x N + 2N Multiply-Add

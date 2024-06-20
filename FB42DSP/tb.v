@@ -88,25 +88,27 @@ module tb;
         #216;
 
         // Test different modes and configurations
-        test_mode(0, 0, 0, "Mode 0", 0);
-        test_mode(0, 1, 0, "MAC Mode 0", 0);
-        test_mode(1, 0, 1, "Mode 1", 0);
-        test_mode(1, 1, 1, "MAC Mode 1", 0);
-        test_mode(2, 0, 3, "Mode 2", 0);
-        test_mode(2, 1, 3, "MAC Mode 2", 0);
+        test_mode(0, 1, 0, 1, "Mode Accumulate", 0);
 
-        test_mode(0, 0, 0, "Mode 0", 1);
-        test_mode(0, 1, 0, "MAC Mode 0", 1);
-        test_mode(1, 0, 1, "Mode 1", 1);
-        test_mode(1, 1, 1, "MAC Mode 1", 1);
-        test_mode(2, 0, 3, "Mode 2", 1);
-        test_mode(2, 1, 3, "MAC Mode 2", 1);
+        test_mode(0, 0, 0, 0, "Mode 0", 0);
+        test_mode(0, 1, 0, 0, "MAC | Mode 0", 0);
+        test_mode(1, 0, 1, 0, "Mode 1", 0);
+        test_mode(1, 1, 1, 0, "MAC | Mode 1", 0);
+        test_mode(2, 0, 3, 0, "Mode 2", 0);
+        test_mode(2, 1, 3, 0, "MAC | Mode 2", 0);
+
+        test_mode(0, 0, 0, 0, "Mode 0", 1);
+        test_mode(0, 1, 0, 0, "MAC | Mode 0", 1);
+        test_mode(1, 0, 1, 0, "Mode 1", 1);
+        test_mode(1, 1, 1, 0, "MAC | Mode 1", 1);
+        test_mode(2, 0, 3, 0, "Mode 2", 1);
+        test_mode(2, 1, 3, 0, "MAC | Mode 2", 1);
 
         #200;
         $finish;
     end
 
-    task test_mode(input reg [1:0] mode_sel, input reg mac_sel, input integer extra_cycles, input [31*8:1] mode_name, input reg [PIPE_STAGE_WIDTH-1:0] pipe_stages);
+    task test_mode(input reg [1:0] mode_sel, input reg mac_sel, input integer extra_cycles, input reg accumulate, input [31*8:1] mode_name, input reg [PIPE_STAGE_WIDTH-1:0] pipe_stages);
         integer i;
         begin
             mode = mode_sel;
@@ -115,23 +117,30 @@ module tb;
 			
             for (i = 0; i < testCount; i = i + 1) begin
                 start = 1;
-                case(mode)
-                    0: begin
-                        aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
-                        bb[WIDTH:WIDTH2+1] = {WIDTH2{bb[WIDTH2]}};
-                        aa[WIDTH2:0] = $random;
-                        bb[WIDTH2:0] = $random;
-                    end
-                    1: begin
-                        aa[WIDTH2:0] = $random;
-                        aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
-                        bb = $random;
-                    end
-                    2: begin
-                        aa = $random;
-			            bb = $random;
-                    end
-                endcase
+				if(accumulate) begin							
+					aa[WIDTH2:0] = $random;
+					aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+					bb = 1;
+				end 
+				else begin
+					case(mode)
+						0: begin
+							aa[WIDTH2:0] = $random;
+							bb[WIDTH2:0] = $random;
+							aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+							bb[WIDTH:WIDTH2+1] = {WIDTH2{bb[WIDTH2]}};
+						end
+						1: begin
+							aa[WIDTH2:0] = $random;
+							aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+							bb = $random;
+						end
+						2: begin
+							aa = $random;
+							bb = $random;
+						end
+					endcase
+				end
                 #cycleLength;
                 start = 0;
                 #(cycleLength * extra_cycles);
@@ -139,9 +148,9 @@ module tb;
             start = 0;
             #100;
             if (error_count == 0)
-                $display("%s Passed", mode_name);
+                $display("%s | Pipes %d | Passed", mode_name, pipe_stages);
             else
-                $display("%s Failed with %d errors", mode_name, error_count);
+                $display("%s | Pipes %d | Failed with %d errors", mode_name, pipe_stages, error_count);
             error_count = 0;
         end
     endtask
