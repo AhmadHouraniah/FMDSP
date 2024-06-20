@@ -1,4 +1,11 @@
-module DSP_model (
+module DSP_model #(
+    parameter WIDTH = 16,
+    parameter PPM_TYPE = 0,
+    parameter SHIFT_BITS = 2,
+    parameter PIPE_STAGE_WIDTH = 2,
+    parameter PIPELINE_BITS = 3,
+    localparam WIDTH2 = WIDTH / 2
+)(
     input clk,
     input start,
     input [WIDTH-1:0] aa,
@@ -13,18 +20,10 @@ module DSP_model (
     output signed [2*WIDTH-1:0] out
 );
 
-    parameter WIDTH = 33;
-    localparam WIDTH2 = WIDTH / 2;
-    parameter PPM_TYPE = 0; // 0: wallace, 1: dadda
-    parameter SHIFT_BITS = 2;
-    parameter PIPE_STAGE_WIDTH = 2;
-    parameter PIPELINE_BITS = 3;
-
     reg signed [2*WIDTH-1:0] out_wire;
     reg mac_prev;
     reg signed [2*WIDTH-1:0] outPrev;
     reg start_r1, start_r2, start_r3;
-
     reg signed [2*WIDTH-1:0] res0;
 
     always @* begin
@@ -96,36 +95,31 @@ module shift_register #(
     parameter WIDTH = 8,
     parameter PIPELINE_BITS = 3
 )(
-    input wire clk,                  // Clock signal
-    input wire [WIDTH-1:0] data_in,  // Data input
-    input wire [PIPELINE_BITS-1:0] depth,  // Number of stages
-    output reg [WIDTH-1:0] data_out  // Data output
+    input wire clk,                  
+    input wire [WIDTH-1:0] data_in,  
+    input wire [PIPELINE_BITS-1:0] depth,  
+    output reg [WIDTH-1:0] data_out  
 );
 
-    reg [WIDTH-1:0] stages [0:PIPELINE_BITS-1]; // Array to hold shifted data
-    reg [PIPELINE_BITS-1:0] current_depth; // Register to hold the current depth value
+    reg [WIDTH-1:0] stages [0:PIPELINE_BITS-1]; 
+    reg [PIPELINE_BITS-1:0] current_depth; 
     integer i;
 
-    // Sequential logic to shift data
     always @(posedge clk) begin
-        // Shift data through the stages
         for (i = PIPELINE_BITS-1; i > 0; i = i - 1) begin
             stages[i] <= #1 stages[i-1];
         end
-        stages[0] <= #1 data_in; // Input data goes into the first stage
+        stages[0] <= #1 data_in; 
 
-        // Update current_depth register
         current_depth <= depth;
     end
 
-    // Output the data from the correct stage based on current_depth
     always @* begin
         if (depth == 0)
             data_out = data_in;
         else if (current_depth > 0 && current_depth <= PIPELINE_BITS) begin
             data_out = stages[current_depth-1];
         end
-        // If depth is invalid, do not update data_out (retain last valid output)
     end
 
 endmodule
