@@ -31,7 +31,7 @@ Included within the DSP module is a barrel shifter that shifts the stored data. 
 
 ## Important Notes
 
-- **Odd Number Width (N):** The width `N` should be an odd number. The operations use the ceiling of `N/2` in their calculations. For example:
+- **Odd Number Width (N):** The width `WIDTH` should be an odd number. The operations use the ceiling of `WIDTH/2` in the calculations. For example, when `WIDTH= 33`:
   - 4-cycle operation: 33 x 33
   - 2-cycle operation: 33 x 17
   - 1-cycle operation: 17 x 17
