@@ -1,17 +1,39 @@
-This directory a DSP implementation.
+# DSP Implementation Module
+
+This directory contains a versatile DSP (Digital Signal Processing) implementation. The DSP module supports a variety of operations optimized for different computational needs, including multiply-add, multiply-accumulate, and accumulation operations.
+
+## Supported Operations
+
 The DSP supports the following operations:
 
-1-cycle N/2xN/2 + N multiply-add
+- **1-cycle Operations:**
+  - N/2 x N/2 + 2N Multiply-Add
+  - N/2 x N/2 Multiply-Accumulate
+  - 2N Accumulate
 
-1-cycle N/2xN/2 multiply-accumulate
+- **2-cycle Operations:**
+  - N/2 x N + 2N Multiply-Add
+  - N/2 x N Multiply-Accumulate
 
-2-cycle N/2xN + N multiply-add
-2-cycle N/2xN multiply-accumulate
+- **4-cycle Operations:**
+  - N x N + 2N Multiply-Add
+  - N x N Multiply-Accumulate
 
-4-cycle NxN + N multiply-add
-4-cycle NxN multiply-accumulate
+## Features
 
-For MAC operations, there is a built it barrel shifter where we set the direction and bits to be shifted
-The shift operation is applied on the stored data.
+### Pipelining
 
-Note: N should be an odd number, and we use the ceil of N/2 in our operations (e.g. 4c- 33x33, 2c-33x17, 1c-17x17 ) 
+The DSP module supports pipelining the final addition. The number of pipeline stages can be specified, allowing for flexibility and optimization based on the specific application requirements. The number of stages is determined by the parameter `pipeline_stages`, where the actual number of stages is calculated as `2^pipeline_stages`.
+
+### Barrel Shifter
+
+Included within the DSP module is a barrel shifter that shifts the stored data. This feature is particularly useful for MAC (Multiply-Accumulate) and accumulation operations, enabling efficient data manipulation and processing.
+
+## Important Notes
+
+- **Odd Number Width (N):** The width `N` should be an odd number. The operations use the ceiling of `N/2` in their calculations. For example:
+  - 4-cycle operation: 33 x 33
+  - 2-cycle operation: 33 x 17
+  - 1-cycle operation: 17 x 17
+
+By adhering to these specifications, the DSP module ensures optimal performance and flexibility for various digital signal processing tasks.
