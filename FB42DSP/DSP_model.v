@@ -61,9 +61,9 @@ module DSP_model #(
                     res0 = $signed(aa[WIDTH-1:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
                         if (shift_dir)
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
-                        else
                             out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+                        else
+                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
                     end else
                         out_wire = res0 + cc;
                 end
