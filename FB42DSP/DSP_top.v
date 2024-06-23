@@ -71,6 +71,11 @@ module DSP_top(clk, start, aa, bb, cc, shift_amount, shift_dir, mode, out, mac, 
                     mult_in2 = {bb[WIDTH-1:WIDTH2]};
                 end 
             end
+            default: begin
+                mult_in1 = 0;
+                mult_in2 = 0;
+                shift_val = 0;
+            end
         endcase       
     end
 
@@ -84,14 +89,14 @@ module DSP_top(clk, start, aa, bb, cc, shift_amount, shift_dir, mode, out, mac, 
 
     wire [2*WIDTH-1:0] comp_in4 =  start? mac&mac_prev?  shifted_comp_out2_r1: 0 : comp_out2_r1;
     
-    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter1(.data_in(comp_out1_r1), .shift_amount(shift_amount), .direction(shift_dir), .data_out(shifted_comp_out1_r1));
-    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter2(.data_in(comp_out2_r1), .shift_amount(shift_amount), .direction(shift_dir), .data_out(shifted_comp_out2_r1));
-//    barrel_shifter2 #(2*WIDTH, SHIFT_BITS) barrel_shifter1(.data_in1(comp_out1_r1), .data_in2(comp_out1_r1),.shift_amount(shift_amount), .direction(shift_dir), .data_out1(shifted_comp_out1_r1), .data_out2(shifted_comp_out1_r1));
+//    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter1(.data_in(comp_out1_r1), .shift_amount(shift_amount), .direction(shift_dir), .data_out(shifted_comp_out1_r1));
+//    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter2(.data_in(comp_out2_r1), .shift_amount(shift_amount), .direction(shift_dir), .data_out(shifted_comp_out2_r1));
+    barrel_shifter2 #(2*WIDTH, SHIFT_BITS) barrel_shifter1(.data_in1(comp_out1_r1), .data_in2(comp_out2_r1),.shift_amount(shift_amount), .direction(shift_dir), .data_out1(shifted_comp_out1_r1), .data_out2(shifted_comp_out2_r1));
 
     flop #(2*WIDTH) flop_comp_out1_r1 (.in(comp_out1), .clk(clk), .out(comp_out1_r1));
     flop #(2*WIDTH) flop_comp_out2_r1 (.in(comp_out2), .clk(clk), .out(comp_out2_r1));
 
-    compressor42 #(2*WIDTH) comp ( comp_in1, comp_in2, comp_in3, comp_in4, {nc,comp_out1}, {nc,comp_out2});
+    compressor42 #(2*WIDTH) comp ( comp_in1, comp_in2, comp_in3, comp_in4, {nc1,comp_out1}, {nc2,comp_out2});
 
     final_addition #(.WIDTH(2*WIDTH), .PIPE_STAGE_WIDTH(PIPE_STAGE_WIDTH), .PIPELINE_BITS(3) ) adder (.clk(clk), .in1(comp_out1), .in2(comp_out2), .pipes(3'b0), .out(out));
 

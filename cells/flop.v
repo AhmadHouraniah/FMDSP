@@ -6,7 +6,7 @@ module flop(clk, in, out);
    output reg [NN-1:0] out;
 
    always @(posedge clk) begin
-      out <= #1 in;
+      out <= in;
    end
 
 endmodule

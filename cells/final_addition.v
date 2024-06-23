@@ -50,7 +50,7 @@ module final_addition
             4: pipes_inv = 1;
             default: pipes_inv= pipes;
         endcase
-        pipeline_enable = 8'bx; // Default to all zeros
+        pipeline_enable = 8'b0; // Default to all zeros
         for (jj = 0; jj < WIDTH / PIPE_STAGE_WIDTH; jj = jj + 1) begin
             pipeline_enable[WIDTH / PIPE_STAGE_WIDTH -1 - jj] = jj%(pipes_inv)==0 & pipes_inv!=0;
         end
@@ -122,8 +122,8 @@ module final_addition_stage
         .out(in2_sr_reg)
     );
 
-    assign in1_sr[SR_WIDTH-WIDTH -1 :0]  = pipelined ? in1_sr_reg : in1[SR_WIDTH :WIDTH];
-    assign in2_sr[SR_WIDTH-WIDTH -1 :0]  = pipelined ? in2_sr_reg : in2[SR_WIDTH -1 :WIDTH];
+    assign in1_sr[SR_WIDTH-WIDTH -1 :0]  = pipelined ? in1_sr_reg : in1[SR_WIDTH -1 : WIDTH];
+    assign in2_sr[SR_WIDTH-WIDTH -1 :0]  = pipelined ? in2_sr_reg : in2[SR_WIDTH -1 : WIDTH];
     assign in1_sr[SR_WIDTH -1 :SR_WIDTH-WIDTH] = 0;
     assign in2_sr[SR_WIDTH -1 :SR_WIDTH-WIDTH] = 0;
     

@@ -24,7 +24,7 @@ module tb;
     reg [WIDTH+WIDTH-1:0] cc;
     reg mac;
     reg shift_dir = 0;
-    reg [PIPE_STAGE_WIDTH-1:0] pipe_stages; // Correcting the size of the pipe_stages
+    reg [PIPE_STAGE_WIDTH-1:0] pipe_stages; 
 
     wire [WIDTH+WIDTH-1:0] model_out;
     wire [WIDTH+WIDTH-1:0] out;
@@ -44,13 +44,14 @@ module tb;
         .out(out),
         .shift_amount(barrel_shifter),
         .shift_dir(shift_dir),
-        .pipe_stages(pipe_stages), // Corrected the connection
+        .pipe_stages(pipe_stages), 
         .mac(mac),
         .cc(cc),
         .aa(aa),
         .bb(bb)
     );
 
+	// Instantiate the Behavioural Model
     DSP_model #(
         .WIDTH(WIDTH), 
         .PPM_TYPE(PPM_TYPE), 
@@ -88,27 +89,45 @@ module tb;
         #216;
 
         // Test different modes and configurations
-        test_mode(0, 1, 0, 1, "Mode Accumulate", 0);
+        test_mode(0, 1, 0, 1, 0, 0, "Mode Accumulate", 0);
+   
+        test_mode(0, 0, 0, 0, 1, 0, "Multiply Add | Mode 0", 0);
+        test_mode(1, 0, 1, 0, 1, 0, "Multiply Add | Mode 1", 0);
+        test_mode(2, 0, 3, 0, 1, 0, "Multiply Add | Mode 2", 0);
+   
+        test_mode(0, 0, 0, 0, 0, 0, "Mode 0", 0);
+        test_mode(0, 1, 0, 0, 0, 0, "MAC | Mode 0", 0);
+        test_mode(1, 0, 1, 0, 0, 0, "Mode 1", 0);
+        test_mode(1, 1, 1, 0, 0, 0, "MAC | Mode 1", 0);
+        test_mode(2, 0, 3, 0, 0, 0, "Mode 2", 0);
+        test_mode(2, 1, 3, 0, 0, 0, "MAC | Mode 2", 0);
+   
+        test_mode(0, 0, 0, 0, 0, 0, "Mode 0", 1);
+        test_mode(0, 1, 0, 0, 0, 0, "MAC | Mode 0", 1);
+        test_mode(1, 0, 1, 0, 0, 0, "Mode 1", 1);
+        test_mode(1, 1, 1, 0, 0, 0, "MAC | Mode 1", 1);
+        test_mode(2, 0, 3, 0, 0, 0, "Mode 2", 1);
+        test_mode(2, 1, 3, 0, 0, 0, "MAC | Mode 2", 1);
 
-        test_mode(0, 0, 0, 0, "Mode 0", 0);
-        test_mode(0, 1, 0, 0, "MAC | Mode 0", 0);
-        test_mode(1, 0, 1, 0, "Mode 1", 0);
-        test_mode(1, 1, 1, 0, "MAC | Mode 1", 0);
-        test_mode(2, 0, 3, 0, "Mode 2", 0);
-        test_mode(2, 1, 3, 0, "MAC | Mode 2", 0);
-
-        test_mode(0, 0, 0, 0, "Mode 0", 1);
-        test_mode(0, 1, 0, 0, "MAC | Mode 0", 1);
-        test_mode(1, 0, 1, 0, "Mode 1", 1);
-        test_mode(1, 1, 1, 0, "MAC | Mode 1", 1);
-        test_mode(2, 0, 3, 0, "Mode 2", 1);
-        test_mode(2, 1, 3, 0, "MAC | Mode 2", 1);
+        test_mode(0, 1, 0, 1, 0, 1, "Mode Accumulate", 0);
+        test_mode(0, 1, 0, 0, 0, 1, "MAC | Mode 0", 1);
+        test_mode(1, 1, 1, 0, 0, 1, "MAC | Mode 1", 1);
+        test_mode(2, 1, 3, 0, 0, 1, "MAC | Mode 2", 1);
 
         #200;
         $finish;
     end
 
-    task test_mode(input reg [1:0] mode_sel, input reg mac_sel, input integer extra_cycles, input reg accumulate, input [31*8:1] mode_name, input reg [PIPE_STAGE_WIDTH-1:0] pipe_stages);
+    task test_mode(
+		input reg [1:0] mode_sel, 
+		input reg mac_sel, 
+		input integer extra_cycles, 
+		input reg accumulate, 
+		input reg multiply_add, 
+		input reg shift,
+		input [31*8:1] mode_name, 
+		input reg [PIPE_STAGE_WIDTH-1:0] pipe_stages);
+
         integer i;
         begin
             mode = mode_sel;
@@ -117,6 +136,18 @@ module tb;
 			
             for (i = 0; i < testCount; i = i + 1) begin
                 start = 1;
+				if(shift) begin
+					barrel_shifter = $random;
+					shift_dir = $random;
+				end
+				else begin
+					barrel_shifter = 0;
+					shift_dir = 0;
+				end
+				if(multiply_add)
+					cc = $random;
+				else
+					cc = 0;
 				if(accumulate) begin							
 					aa[WIDTH2:0] = $random;
 					aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
@@ -146,15 +177,17 @@ module tb;
                 #(cycleLength * extra_cycles);
             end
             start = 0;
+			mac = 0;
             #100;
             if (error_count == 0)
-                $display("%s | Pipes %d | Passed", mode_name, pipe_stages);
+                $display("%s | Pipes %d | Shift %d %d | Passed", mode_name, pipe_stages, shift_dir, barrel_shifter);
             else
-                $display("%s | Pipes %d | Failed with %d errors", mode_name, pipe_stages, error_count);
+                $display("%s | Pipes %d | Shift %d %d | Failed with %d errors", mode_name, pipe_stages, shift_dir, barrel_shifter, error_count);
             error_count = 0;
         end
     endtask
 
+	//Check for mismatches
     always @(posedge clk) begin
         if (compare_res && (model_out !== out)) 
             error_count = error_count + 1;
