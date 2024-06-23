@@ -1,213 +1,185 @@
 `timescale 1ns / 1ps
 
-module mcmult2_tb;
+module tb;
 
-	parameter N = `N;
-	parameter PIPES = `PIPES;
-	//only works for 2 and 3, requires modifications for larger intervals
-	//0:wallace, 1:dadda
-	parameter mult = `MULT;
-	
-    localparam N2 = N/2;
+    parameter WIDTH = `WIDTH;
+    parameter PPM_TYPE = `PPM_TYPE;
+    parameter SHIFT_BITS = 2;
+    parameter testCount = 200;
+    parameter clkLength = 5;
+    parameter cycleLength = 2 * clkLength;
+    localparam WIDTH2 = WIDTH / 2;
 
-	parameter testCount = 200;
-	parameter clkLength = 5;
-	parameter cycleLength = 2*clkLength;
+    integer error_count = 0;
 
-	integer error_count=0;
-	// Inputs
-	reg [1:0] mode;
-	reg clk;
-	reg start;
-	reg [1:0] barrel_shifter;
-	reg [N-1:0] aa;
-	reg [N-1:0] bb;
-	reg [N+N-1:0] cc;
+    // Inputs
+    reg [1:0] mode;
+    reg clk;
+    reg start;
+    reg [1:0] barrel_shifter;
+    reg [WIDTH-1:0] aa;
+    reg [WIDTH-1:0] bb;
+    reg [WIDTH+WIDTH-1:0] cc;
+    reg mac;
+    reg shift_dir = 0;
 
+    wire [WIDTH+WIDTH-1:0] model_out;
+    wire [WIDTH+WIDTH-1:0] out;
     wire compare_res;
 
-	// Outputs
-	wire [N+N-1:0] out;
+    // Instantiate the Unit Under Test (UUT)
+    DSP_top #(
+        .WIDTH(WIDTH), 
+        .PPM_TYPE(PPM_TYPE), 
+        .SHIFT_BITS(SHIFT_BITS)
+    ) uut (
+        .clk(clk),
+        .start(start),
+        .mode(mode),
+        .out(out),
+        .shift_amount(barrel_shifter),
+        .shift_dir(shift_dir),
+        .mac(mac),
+        .cc(cc),
+        .aa(aa),
+        .bb(bb)
+    );
 
-	integer ii;
-	wire [N+N-1:0] model_out;
+	// Instantiate the Behavioural Model
+    DSP_model #(
+        .WIDTH(WIDTH), 
+        .PPM_TYPE(PPM_TYPE), 
+        .SHIFT_BITS(SHIFT_BITS)
+    ) model (
+        .clk(clk),
+        .start(start),
+        .mode(mode),
+        .out(model_out),
+        .shift_amount(barrel_shifter),
+        .shift_dir(shift_dir),
+        .mac(mac),
+        .cc(cc),
+        .aa(aa),
+        .bb(bb),
+        .compare_res(compare_res)
+    );
 
-	// Instantiate the Unit Under Test (UUT)
-    wire [31:0] nc;
-    
-	reg mac;
+    always #clkLength clk = ~clk;
 
-	DSP_top #(N, PIPES, mult, 2)	uut (
-	.clk(clk),
-	.start(start),
-	.mode(mode),
-	.out(out),
-	.shift_amount(barrel_shifter),
-	.shift_dir(1'b1),
-	.mac(mac),
-	.cc(cc),
-	.aa(aa),
-	.bb(bb)
-	);
+    initial begin
+        $dumpvars;
+        cc = 0;
+        mac = 0;
+        mode = 0;
+        clk = 0;
+        start = 0;
+        aa = 0;
+        bb = 0;
+        barrel_shifter = 0;
+        #216;
 
-	DSP_model #(N,PIPES, mult)	model (
-	.clk(clk),
-	.start(start),
-	.mode(mode),
-	.barrel_shifter(barrel_shifter),
-	.mac(mac),
-	.out(model_out),
-	.cc(cc),
-	.aa(aa),
-	.bb(bb),
-    .compare_res(compare_res)
-	);
+        // Test different modes and configurations
+        test_mode(0, 1, 0, 1, 0, 0, "Mode Accumulate");
+        test_mode(0, 0, 0, 0, 0, 0, "Multiply Add | Mode 0");
+        test_mode(1, 0, 1, 0, 0, 0, "Multiply Add | Mode 1");
+        test_mode(2, 0, 3, 0, 0, 0, "Multiply Add | Mode 2");
+        
+        test_mode(0, 0, 0, 0, 0, 0, "Mode 0");
+        test_mode(0, 1, 0, 0, 0, 0, "MAC | Mode 0");
+        test_mode(1, 0, 1, 0, 0, 0, "Mode 1");
+        
+        test_mode(1, 1, 1, 0, 0, 0, "MAC | Mode 1");
+        test_mode(2, 0, 3, 0, 0, 0, "Mode 2");
+        test_mode(2, 1, 3, 0, 0, 0, "MAC | Mode 2");
+        
+        test_mode(0, 0, 0, 0, 0, 1, "Mode 0");
+        test_mode(0, 1, 0, 0, 0, 1, "MAC | Mode 0");
+        test_mode(1, 0, 1, 0, 0, 1, "Mode 1");
+        
+        test_mode(1, 1, 1, 0, 0, 1, "MAC | Mode 1");
+        test_mode(2, 0, 3, 0, 0, 1, "Mode 2");
+        test_mode(2, 1, 3, 0, 0, 1, "MAC | Mode 2");
 
-	always #clkLength clk=~clk;
+        test_mode(0, 1, 0, 1, 1, 1, "Mode Accumulate");
+        test_mode(0, 1, 0, 0, 1, 1, "MAC | Mode 0");
+        test_mode(1, 1, 1, 0, 1, 1, "MAC | Mode 1");
+        test_mode(2, 1, 3, 0, 1, 1, "MAC | Mode 2");
 
-	initial begin
-		$dumpvars;
-		cc = 0;
-		mac = 0;
-		mode=0;
-		clk = 0;
-		start <= 0;
-		aa <= 0;
-		bb <= 0;
-		barrel_shifter = 0;
-		#216;
-		mode=0;
-		for(ii=0; ii<testCount; ii=ii+1) begin
-			start =1;
-			aa[N:N2+1] = {N2{aa[N2]}};
-			bb[N:N2+1] = {N2{bb[N2]}};
-			aa[N2:0] = $random;
-			bb[N2:0] = $random;
-			#cycleLength;
-		end
-		start = 0;
-		#100;
-		if(error_count == 0)
-			$display("Mode 1 Passed");
-		else
-			$display("Mode 1 Failed with %d errors", error_count);
-		error_count = 0;
-
-		mode=0;
-		mac=1;
-		
-		for(ii=0; ii<testCount; ii=ii+1) begin
-			start =1;
-			//barrel_shifter = $random;
-			aa[N:N2+1] = {N2{aa[N2]}};
-			bb[N:N2+1] = {N2{bb[N2]}};
-			aa[N2:0] = $random;
-			bb[N2:0] = $random;
-			#cycleLength;
-			//start = 0;
-		end
-		start = 0;
-		#100;
-		if(error_count == 0)
-			$display("MAC Mode 1 Passed");
-		else
-			$display("MAC Mode 1 Failed with %d errors", error_count);
-		error_count = 0;
-		
-		mac=0;
-		mode=1;
-		barrel_shifter = 0;
-		for(ii=0; ii<testCount; ii=ii+1) begin
-			start =1;
-			aa[N2:0] = $random;
-			aa[N:N2+1] = {N2{aa[N2]}};
-			bb = $random;
-			#cycleLength;
-			start = 0;
-			#cycleLength;
-			
-		end
-		start = 0;
-		#100;
-		if(error_count == 0)
-			$display("Mode 2 Passed");
-		else
-			$display("Mode 2 Failed with %d errors", error_count);
-		error_count = 0;
-		
-
-		mac=1;
-		mode=1;
-		for(ii=0; ii<testCount; ii=ii+1) begin
-			start =1;
-			aa[N2:0] = $random;
-			aa[N:N2+1] = {N2{aa[N2]}};
-			bb = $random;
-			#cycleLength;
-			start = 0;
-			#cycleLength;
-			
-		end
-		start = 0;
-		#100;
-		if(error_count == 0)
-			$display("MAC Mode 2 Passed");
-		else
-			$display("MAC Mode 2 Failed with %d errors", error_count);
-		error_count = 0;
-
-		mac = 0;
-		barrel_shifter = 0;
-		mode=2;
-		for(ii=0; ii<testCount; ii=ii+1) begin
-			start =1;
-			aa = $random;
-			bb = $random;
-			#cycleLength;
-			start = 0;
-			#cycleLength;
-			#cycleLength;
-			#cycleLength;
-		end
-		start = 0;
-		#100;
-		if(error_count == 0)
-			$display("Mode 3 Passed");
-		else
-			$display("Mode 3 Failed with %d errors", error_count);
-		error_count = 0;
-		
-		mac = 1;
-		mode=2;
-		for(ii=0; ii<testCount; ii=ii+1) begin
-			start =1;
-			//barrel_shifter = $random;
-			aa = $random;
-			bb = $random;
-			#cycleLength;
-			start = 0;
-			#cycleLength;
-			#cycleLength;
-			#cycleLength;
-		end
-		start = 0;
-		#100;
-		if(error_count == 0)
-			$display("MAC Mode 3 Passed");
-		else
-			$display("MAC Mode 3 Failed with %d errors", error_count);
-		error_count = 0;
-
-		#200 
-		$finish;
+        #200;
+        $finish;
     end
 
-    always@(posedge clk) begin
-        if(compare_res) 
-			if(model_out != out) 
-				error_count = error_count +1;
+    task test_mode(
+		input reg [1:0] mode_sel, 
+		input reg mac_sel, 
+		input integer extra_cycles, 
+		input reg accumulate, 
+		input reg multiply_add, 
+		input reg shift,
+		input [31*8:1] mode_name);
+        integer i;
+        begin
+            mode = mode_sel;
+            #100;
+			mac = mac_sel;
+			
+            for (i = 0; i < testCount; i = i + 1) begin
+                start = 1;
+				if(shift) begin
+					barrel_shifter = $random;
+					shift_dir = $random;
+				end
+				else begin
+					barrel_shifter = 0;
+					shift_dir = 0;
+				end
+				if(multiply_add)
+					cc = $random;
+				else
+					cc = 0;
+				if(accumulate) begin							
+					aa[WIDTH2:0] = $random;
+					aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+					bb = 1;
+				end 
+				else begin
+					case(mode)
+						0: begin
+							aa[WIDTH2:0] = $random;
+							bb[WIDTH2:0] = $random;
+							aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+							bb[WIDTH:WIDTH2+1] = {WIDTH2{bb[WIDTH2]}};
+						end
+						1: begin
+							aa[WIDTH2:0] = $random;
+							aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+							bb = $random;
+						end
+						2: begin
+							aa = $random;
+							bb = $random;
+						end
+					endcase
+				end
+                #cycleLength;
+                start = 0;
+                #(cycleLength * extra_cycles);
+            end
+            start = 0;
+			mac = 0;
+            #100;
+            if (error_count == 0)
+                $display("%s | Shift %d %d | Passed", mode_name, shift_dir, barrel_shifter);
+            else
+                $display("%s | Shift %d %d | Failed with %d errors", mode_name, shift_dir, barrel_shifter, error_count);
+            error_count = 0;
+        end
+    endtask
+
+	//Check for mismatches
+    always @(posedge clk) begin
+        if (compare_res && (model_out !== out)) 
+            error_count = error_count + 1;
     end
 
 endmodule
-
-        

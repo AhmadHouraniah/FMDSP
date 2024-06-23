@@ -12,8 +12,6 @@ module barrel_shifter2 #(parameter WIDTH = 8, parameter SHIFT_BITS = 3)(
             // Left shift
             data_out1 = data_in1 << shift_amount;
             data_out2 = data_in2 << shift_amount;
-            data_out1[WIDTH-1] = data_in1[WIDTH-1];
-            data_out2[WIDTH-1] = data_in2[WIDTH-1];
             
         end else begin
             // Right shift with sign extension
@@ -73,9 +71,11 @@ module barrel_shifter #(parameter WIDTH = 8, parameter SHIFT_BITS = 3)(
         if (direction == 1'b0) begin
             // Left shift
             data_out = data_in << shift_amount;
+
         end else begin
             // Right shift with sign extension
-            data_out = data_in >>> shift_amount;
+            data_out = {{WIDTH{data_in[WIDTH-1]}},data_in} >> shift_amount;
+
         end
     end
 endmodule

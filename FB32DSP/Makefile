@@ -1,21 +1,23 @@
 #make simulate N=16 M=16
 
 # Default values for N and M
-N ?= 9
-M ?= 9
+WIDTH ?= 33
 
 # Calculating N2 and M2 as N/2 + 1 and M/2 + 1
-N2 := $(shell echo $$(($(N)/2 + 1)))
-M2 := $(shell echo $$(($(M)/2 + 1)))
+WIDTH2 := $(shell echo $$(($(WIDTH)/2 + 1)))
 
-PIPES = 0
-MULT = 0
+PIPE_STAGE_WIDTH ?= 2
+PPM_TYPE ?= 0
 
 generate_PPM: 
-	./generate_PPM $(N2) $(M2)
+	./generate_PPM $(WIDTH2) $(WIDTH2)
 
 simulate: generate_PPM
-	iverilog -o simulate -DN=$(N) -DM=$(M) -DPIPES=$(PIPES) -DMULT=$(MULT) tb.v DSP_top.v DSP_model.v ../cells/*.v
+	iverilog -o simulate -DWIDTH=$(WIDTH) -DPIPE_STAGE_WIDTH=$(PIPE_STAGE_WIDTH) -DPPM_TYPE=$(PPM_TYPE) tb.v DSP_top.v DSP_model.v ../cells/*.v
 	vvp simulate
+
+simulate_modelsim: generate_PPM
+	vlog +define+WIDTH=$(WIDTH) +define+PIPE_STAGE_WIDTH=$(PIPE_STAGE_WIDTH) +define+PPM_TYPE=$(PPM_TYPE) tb.v DSP_top.v DSP_model.v ../cells/*.v
+	vsim tb -c -do "run -all"
 
 .PHONY: simulate generate_PPM
