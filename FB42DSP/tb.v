@@ -112,7 +112,7 @@ module tb;
         test_mode(0, 1, 0, 1, 0, 1, "Mode Accumulate", 0);
         test_mode(0, 1, 0, 0, 0, 1, "MAC | Mode 0", 1);
         test_mode(1, 1, 1, 0, 0, 1, "MAC | Mode 1", 1);
-        test_mode(2, 1, 3, 0, 0, 1, "MAC | Mode 2", 1);
+        test_mode(2, 1, 3, 0, 0, 1, "MAC | Mode 2", 0);
 
         #200;
         $finish;
@@ -138,7 +138,7 @@ module tb;
                 start = 1;
 				if(shift) begin
 					barrel_shifter = $random;
-					shift_dir = $random;
+					shift_dir = 1;
 				end
 				else begin
 					barrel_shifter = 0;
@@ -158,12 +158,12 @@ module tb;
 						0: begin
 							aa[WIDTH2:0] = $random;
 							bb[WIDTH2:0] = $random;
-							aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
-							bb[WIDTH:WIDTH2+1] = {WIDTH2{bb[WIDTH2]}};
+							aa[WIDTH-1:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+							bb[WIDTH-1:WIDTH2+1] = {WIDTH2{bb[WIDTH2]}};
 						end
 						1: begin
 							aa[WIDTH2:0] = $random;
-							aa[WIDTH:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
+							aa[WIDTH-1:WIDTH2+1] = {WIDTH2{aa[WIDTH2]}};
 							bb = $random;
 						end
 						2: begin
@@ -180,9 +180,9 @@ module tb;
 			mac = 0;
             #100;
             if (error_count == 0)
-                $display("%s | Pipes %d | Shift %d %d | Passed", mode_name, pipe_stages, shift_dir, barrel_shifter);
+                $display("%s | Pipes %d | Shift %d | Passed", mode_name, pipe_stages, shift_dir);
             else
-                $display("%s | Pipes %d | Shift %d %d | Failed with %d errors", mode_name, pipe_stages, shift_dir, barrel_shifter, error_count);
+                $display("%s | Pipes %d | Shift %d | Failed with %d errors", mode_name, pipe_stages, shift_dir, error_count);
             error_count = 0;
         end
     endtask

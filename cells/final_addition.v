@@ -249,3 +249,33 @@ endmodule
 //    end
 //
 //endmodule
+
+
+
+module n_bit_adder #(
+    parameter N = 4
+)(
+    input [N-1:0] a,
+    input [N-1:0] b,
+    output [N:0] carry // N+1 carry bits to include the final carry-out
+);
+    wire [N-1:0] sum;
+    wire [N:0] carry_internal;
+    assign carry_internal[0] = 1'b0;
+
+    genvar i;
+    generate
+        for (i = 0; i < N; i = i + 1) begin : adder
+            fa fa_inst (
+                .a(a[i]),
+                .b(b[i]),
+                .c_i(carry_internal[i]),
+                .s(sum[i]),
+                .c_o(carry_internal[i + 1])
+            );
+        end
+    endgenerate
+
+    assign carry = carry_internal;
+
+endmodule

@@ -25,6 +25,7 @@ module DSP_model #(
     reg signed [2*WIDTH-1:0] outPrev;
     reg start_r1, start_r2, start_r3;
     reg signed [2*WIDTH-1:0] res0;
+	reg signed [2*WIDTH-1:0] shifted1;
 
     always @* begin
         compare_res = (~mode[1] & ~mode[0] & start) | (~mode[1] & mode[0] & start_r1) | (mode[1] & ~mode[0] & start_r3);
@@ -60,17 +61,18 @@ module DSP_model #(
                 if (start) begin
                     res0 = $signed(aa[WIDTH-1:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
-                        if (shift_dir)
+                        if (shift_dir) begin
+                            //out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+							shifted1 = ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+							out_wire = shifted1 +res0;
+						end else
                             out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
-                        else
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
                     end else
                         out_wire = res0 + cc;
                 end
             end
         endcase
     end
-
     always @(posedge clk) begin
         mac_prev <= mac;
         outPrev <= out_wire;

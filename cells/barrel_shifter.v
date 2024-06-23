@@ -3,24 +3,31 @@ module barrel_shifter2 #(parameter WIDTH = 8, parameter SHIFT_BITS = 3)(
     input wire signed [WIDTH-1:0] data_in2,
     input wire [SHIFT_BITS-1:0] shift_amount,
     input wire direction, // 0 for left shift, 1 for right shift
-    output reg signed [WIDTH-1:0] data_out1,
-    output reg signed [WIDTH-1:0] data_out2
+    output signed [WIDTH-1:0] data_out1,
+    output signed [WIDTH-1:0] data_out2
+    //output reg carry_out
 );
 
-    always @* begin
-        if (direction == 1'b0) begin
-            // Left shift
-            data_out1 = data_in1 << shift_amount;
-            data_out2 = data_in2 << shift_amount;
-            data_out1[WIDTH-1] = data_in1[WIDTH-1];
-            data_out2[WIDTH-1] = data_in2[WIDTH-1];
-            
-        end else begin
-            // Right shift with sign extension
-            data_out1 = {{WIDTH{data_in1[WIDTH-1]}},data_in1} >> shift_amount;
-            data_out2 = {{WIDTH{data_in2[WIDTH-1]}},data_in2} >> shift_amount;
-        end
-    end
+    wire [2**SHIFT_BITS:0] carries;
+//   always @* begin
+//       if (direction == 1'b0) begin
+//           // Left shift
+//           data_out1 = data_in1 << shift_amount;
+//           data_out2 = data_in2 << shift_amount;
+//
+//       end else begin
+//           // Right shift with sign extension
+//           data_out1 =  {{WIDTH{data_in1[WIDTH-1]}},data_in1} >> shift_amount;
+//           data_out2 = carries[shift_amount] +{{WIDTH{data_in2[WIDTH-1]}},data_in2} >> shift_amount;
+//       end
+//   end
+    compressor32 #(WIDTH) comp2 (direction? {{WIDTH{data_in1[WIDTH-1]}},data_in1} >> shift_amount : data_in1 << shift_amount, 
+                              direction? {{WIDTH{data_in2[WIDTH-1]}},data_in2} >> shift_amount : data_in2 << shift_amount,
+                              direction? carries[shift_amount] : 0,
+                              {nc1, data_out1}, 
+                              {nc2, data_out2});
+
+    n_bit_adder #(2**SHIFT_BITS) n_bit_adder(.a(data_in1[2**SHIFT_BITS-1:0]), .b(data_in2[2**SHIFT_BITS-1:0]), .carry(carries));
 
 endmodule
 //
