@@ -21,7 +21,8 @@ module barrel_shifter2 #(parameter WIDTH = 8, parameter SHIFT_BITS = 3)(
 //           data_out2 = carries[shift_amount] +{{WIDTH{data_in2[WIDTH-1]}},data_in2} >> shift_amount;
 //       end
 //   end
-    compressor32 #(WIDTH) comp2 (direction? {{WIDTH{data_in1[WIDTH-1]}},data_in1} >> shift_amount : data_in1 << shift_amount, 
+    compressor32 #(WIDTH) comp2 (
+                              direction? {{WIDTH{data_in1[WIDTH-1]}},data_in1} >> shift_amount : data_in1 << shift_amount, 
                               direction? {{WIDTH{data_in2[WIDTH-1]}},data_in2} >> shift_amount : data_in2 << shift_amount,
                               direction? carries[shift_amount] : 0,
                               {nc1, data_out1}, 

@@ -64,7 +64,8 @@ module DSP_model #(
                         if (shift_dir) begin
                             //out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
 							shifted1 = ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
-							out_wire = shifted1 +res0;
+                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+
 						end else
                             out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
                     end else
