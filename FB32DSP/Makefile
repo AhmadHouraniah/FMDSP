@@ -10,7 +10,7 @@ PIPE_STAGE_WIDTH ?= 2
 PPM_TYPE ?= 0
 
 generate_PPM: 
-	./generate_PPM $(WIDTH2) $(WIDTH2)
+	../mult-tree/generate_PPM $(WIDTH2) $(WIDTH2)
 
 simulate: generate_PPM
 	iverilog -o simulate -DWIDTH=$(WIDTH) -DPIPE_STAGE_WIDTH=$(PIPE_STAGE_WIDTH) -DPPM_TYPE=$(PPM_TYPE) tb.v DSP_top.v DSP_model.v ../cells/*.v
