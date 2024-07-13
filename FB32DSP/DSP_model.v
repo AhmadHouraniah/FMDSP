@@ -1,8 +1,7 @@
 module DSP_model #(
     parameter WIDTH = 16,
     parameter PPM_TYPE = 0,
-    parameter SHIFT_BITS = 2,
-    localparam WIDTH2 = WIDTH / 2
+    parameter SHIFT_BITS = 2
 )(
     input clk,
     input start,
@@ -16,6 +15,7 @@ module DSP_model #(
     output reg compare_res,
     output signed [2*WIDTH-1:0] out
 );
+    localparam WIDTH2 = WIDTH / 2;
 
     reg signed [2*WIDTH-1:0] out_wire;
     reg mac_prev;
