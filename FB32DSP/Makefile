@@ -25,11 +25,21 @@ simulate_modelsim: generate_PPM
 
 .PHONY: harden
 harden:
-	cp -r ../FB32DSP ../OpenLane/designs/ 
-	cp -r ../cells ../OpenLane/designs/FB32DSP/
+	rsync -av --exclude 'runs' ../FB32DSP ../OpenLane/designs/
+	rsync -av ../cells ../OpenLane/designs/FB32DSP/
 
-	docker run --rm -v /home/ahmad:/home/ahmad -v /home/ahmad/FMDSP/OpenLane:/openlane \
-	-v /home/ahmad/FMDSP/empty:/openlane/install -v /home/ahmad/.volare:/home/ahmad/.volare \
-	-e PDK_ROOT=/home/ahmad/.volare -e PDK=sky130A  --user 1000:1000 -e DISPLAY=:0 \
-	-v /tmp/.X11-unix:/tmp/.X11-unix -v /home/ahmad/.Xauthority:/.Xauthority --network host \
-	--security-opt seccomp=unconfined efabless/openlane:latest-amd64 sh -c "./flow.tcl -design FB32DSP"
+	docker run --rm \
+		-v $(HOME):$(HOME) \
+		-v $(shell pwd)/../OpenLane:/openlane \
+		-v $(shell pwd)/../empty:/openlane/install \
+		-v $(HOME)/.volare:$(HOME)/.volare \
+		-e PDK_ROOT=$(HOME)/.volare \
+		-e PDK=sky130A \
+		--user $(shell id -u):$(shell id -g) \
+		-e DISPLAY=$(DISPLAY) \
+		-v /tmp/.X11-unix:/tmp/.X11-unix \
+		-v $(HOME)/.Xauthority:/root/.Xauthority \
+		--network host \
+		--security-opt seccomp=unconfined \
+		efabless/openlane:latest-amd64 \
+		sh -c "./flow.tcl -design FB32DSP"
