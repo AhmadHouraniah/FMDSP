@@ -21,3 +21,15 @@ simulate_modelsim: generate_PPM
 	vsim tb -c -do "run -all"
 
 .PHONY: simulate generate_PPM
+
+
+.PHONY: harden
+harden:
+	cp -r ../FB32DSP ../OpenLane/designs/ 
+	cp -r ../cells ../OpenLane/designs/FB32DSP/
+
+	docker run --rm -v /home/ahmad:/home/ahmad -v /home/ahmad/FMDSP/OpenLane:/openlane \
+	-v /home/ahmad/FMDSP/empty:/openlane/install -v /home/ahmad/.volare:/home/ahmad/.volare \
+	-e PDK_ROOT=/home/ahmad/.volare -e PDK=sky130A  --user 1000:1000 -e DISPLAY=:0 \
+	-v /tmp/.X11-unix:/tmp/.X11-unix -v /home/ahmad/.Xauthority:/.Xauthority --network host \
+	--security-opt seccomp=unconfined efabless/openlane:latest-amd64 sh -c "./flow.tcl -design FB32DSP"
