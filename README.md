@@ -1,2 +1,2 @@
 # MCDSP
-Open-source DSP Compiler 
+Open-source DSP Block IP Generator 
