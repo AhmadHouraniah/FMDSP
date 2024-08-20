@@ -25,6 +25,8 @@ module tb;
     reg mac;
     reg shift_dir = 0;
     reg [PIPE_STAGE_WIDTH-1:0] pipe_stages; 
+    reg shift_enable;
+    reg rst;
 
     wire [WIDTH+WIDTH-1:0] model_out;
     wire [WIDTH+WIDTH-1:0] out;
@@ -42,6 +44,8 @@ module tb;
         .start(start),
         .mode(mode),
         .out(out),
+        .shift_enable(shift_enable),
+        .rst(rst),
         .shift_amount(barrel_shifter),
         .shift_dir(shift_dir),
         .pipe_stages(pipe_stages), 
@@ -65,6 +69,8 @@ module tb;
         .out(model_out),
         .shift_amount(barrel_shifter),
         .shift_dir(shift_dir),
+        .shift_enable(shift_enable),
+        .rst(rst),
         .pipe_stages(pipe_stages), // Corrected the connection
         .mac(mac),
         .cc(cc),
@@ -86,8 +92,11 @@ module tb;
         bb = 0;
         barrel_shifter = 0;
         pipe_stages = 0;
+        rst = 1;
+
         #216;
 
+        rst = 0;
         // Test different modes and configurations
         test_mode(0, 1, 0, 1, 0, 0, "Mode Accumulate", 0);
    
@@ -126,7 +135,7 @@ module tb;
 		input reg multiply_add, 
 		input reg shift,
 		input [31*8:1] mode_name, 
-		input reg [PIPE_STAGE_WIDTH-1:0] pipe_stages);
+		input reg [PIPE_STAGE_WIDTH-1:0] pipeline_enable);
 
         integer i;
         begin
@@ -136,11 +145,14 @@ module tb;
 			
             for (i = 0; i < testCount; i = i + 1) begin
                 start = 1;
+                pipe_stages = pipeline_enable;
 				if(shift) begin
+                    shift_enable = 1'b1;
 					barrel_shifter = $random;
 					shift_dir = $random;
 				end
 				else begin
+                    shift_enable = 1'b0;
 					barrel_shifter = 0;
 					shift_dir = 0;
 				end
@@ -180,15 +192,16 @@ module tb;
 			mac = 0;
             #100;
             if (error_count == 0)
-                $display("%s | Pipes %d | Shift %d %d | Passed", mode_name, pipe_stages, shift_dir, barrel_shifter);
+                $display("%s | Pipes %d | Shift %d %d | Passed", mode_name, pipeline_enable, shift_dir, barrel_shifter);
             else
-                $display("%s | Pipes %d | Shift %d %d | Failed with %d errors", mode_name, pipe_stages, shift_dir, barrel_shifter, error_count);
+                $display("%s | Pipes %d | Shift %d %d | Failed with %d errors", mode_name, pipeline_enable, shift_dir, barrel_shifter, error_count);
             error_count = 0;
         end
     endtask
 
 	//Check for mismatches
     always @(posedge clk) begin
+        
         if (compare_res && (model_out !== out)) 
             error_count = error_count + 1;
     end

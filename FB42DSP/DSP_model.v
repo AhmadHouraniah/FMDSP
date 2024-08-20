@@ -6,6 +6,8 @@ module DSP_model #(
     parameter PIPELINE_BITS = 3,
     localparam WIDTH2 = WIDTH / 2
 )(
+    input shift_enable,
+    input rst,
     input clk,
     input start,
     input [WIDTH-1:0] aa,
@@ -16,10 +18,11 @@ module DSP_model #(
     input [1:0] mode,
     input mac,
     input [PIPELINE_BITS-1:0] pipe_stages,
-    output reg compare_res,
+    output compare_res,
     output signed [2*WIDTH-1:0] out
 );
 
+    reg compare_res_next;
     reg signed [2*WIDTH-1:0] out_wire;
     reg mac_prev;
     reg signed [2*WIDTH-1:0] outPrev;
@@ -27,7 +30,7 @@ module DSP_model #(
     reg signed [2*WIDTH-1:0] res0;
 
     always @* begin
-        compare_res = (~mode[1] & ~mode[0] & start) | (~mode[1] & mode[0] & start_r1) | (mode[1] & ~mode[0] & start_r3);
+        compare_res_next = (~mode[1] & ~mode[0] & start) | (~mode[1] & mode[0] & start_r1) | (mode[1] & ~mode[0] & start_r3);
         out_wire = outPrev;
 
         case (mode)
@@ -35,10 +38,13 @@ module DSP_model #(
                 if (start) begin
                     res0 = $signed(aa[WIDTH2:0]) * $signed(bb[WIDTH2:0]);
                     if (mac & mac_prev) begin
-                        if (shift_dir)
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+                        if(shift_enable)
+                            if (shift_dir)
+                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+                            else
+                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
                         else
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                             out_wire = res0 + outPrev;
                     end else
                         out_wire = res0 + cc;
                 end else
@@ -48,10 +54,13 @@ module DSP_model #(
                 if (start) begin
                     res0 = $signed(aa[WIDTH2:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
-                        if (shift_dir)
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+                        if(shift_enable)
+                            if (shift_dir)
+                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+                            else
+                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
                         else
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                             out_wire = res0 + outPrev;
                     end else
                         out_wire = res0 + cc;
                 end
@@ -60,10 +69,13 @@ module DSP_model #(
                 if (start) begin
                     res0 = $signed(aa[WIDTH-1:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
-                        if (shift_dir)
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+                        if(shift_enable)
+                            if (shift_dir)
+                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
+                            else
+                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
                         else
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                             out_wire = res0 + outPrev;
                     end else
                         out_wire = res0 + cc;
                 end
@@ -85,41 +97,17 @@ module DSP_model #(
     ) shift_register_inst (
         .clk(clk),
         .data_in(out_wire),
-        .depth(pipe_stages),
+        .depth(shift_enable? {PIPELINE_BITS{1'b0}} : pipe_stages),
         .data_out(out)
     );
 
-endmodule
-
-module shift_register #(
-    parameter WIDTH = 8,
-    parameter PIPELINE_BITS = 3
-)(
-    input wire clk,                  
-    input wire [WIDTH-1:0] data_in,  
-    input wire [PIPELINE_BITS-1:0] depth,  
-    output reg [WIDTH-1:0] data_out  
-);
-
-    reg [WIDTH-1:0] stages [0:PIPELINE_BITS-1]; 
-    reg [PIPELINE_BITS-1:0] current_depth; 
-    integer i;
-
-    always @(posedge clk) begin
-        for (i = PIPELINE_BITS-1; i > 0; i = i - 1) begin
-            stages[i] <= #1 stages[i-1];
-        end
-        stages[0] <= #1 data_in; 
-
-        current_depth <= depth;
-    end
-
-    always @* begin
-        if (depth == 0)
-            data_out = data_in;
-        else if (current_depth > 0 && current_depth <= PIPELINE_BITS) begin
-            data_out = stages[current_depth-1];
-        end
-    end
-
+    shift_register #(
+        .WIDTH(1),
+        .PIPELINE_BITS(PIPELINE_BITS)
+    ) shift_register_inst_2 (
+        .clk(clk),
+        .data_in(compare_res_next),
+        .depth(shift_enable? {PIPELINE_BITS{1'b0}} : pipe_stages),
+        .data_out(compare_res)
+    );
 endmodule
