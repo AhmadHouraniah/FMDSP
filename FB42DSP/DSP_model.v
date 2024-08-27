@@ -89,21 +89,26 @@ module DSP_model #(
         start_r3 <= start_r2;
     end
 
-    shift_register_with_bypass #(
-        .WIDTH(2*WIDTH)
+    wire [2*WIDTH-1:0] out_r;
+    shift_register #(
+        .WIDTH(2*WIDTH), 
+        .DEPTH(3)
     ) shift_register_inst (
         .clk(clk),
-        .data_in(out_wire),
-        .piped(~shift_enable & piped_final_addition),
-        .data_out(out)
+        .in(out_wire),
+        .out(out_r)
     );
-
-    shift_register_with_bypass #(
-        .WIDTH(1)
+    
+    wire compare_res_r;
+    shift_register #(
+        .WIDTH(1), 
+        .DEPTH(3)
     ) shift_register_inst_2 (
         .clk(clk),
-        .data_in(compare_res_next),
-        .piped(~shift_enable & piped_final_addition),
-        .data_out(compare_res)
+        .in(compare_res_next),
+        .out(compare_res_r)
     );
+    assign out = ~shift_enable & piped_final_addition? out_r : out_wire;
+    assign compare_res = ~shift_enable & piped_final_addition? compare_res_r : compare_res_next;
+    
 endmodule

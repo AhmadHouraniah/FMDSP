@@ -48,69 +48,28 @@ set_load 0.19 [all_outputs]
 
 set_case_analysis 0 [get_ports mode[0]]
 set_case_analysis 0 [get_ports mode[1]]
-
-
 report_checks -path min 
 
 
 
 set_case_analysis 1 [get_ports mode[0]]
 set_case_analysis 0 [get_ports mode[1]]
-
-
 report_checks -path min 
 
 
 
 set_case_analysis 0 [get_ports mode[1]]
 set_case_analysis 1 [get_ports mode[0]]
-
-
 report_checks -path min 
-
 
 unset_case_analysis [get_ports mode[1]]
 unset_case_analysis [get_ports mode[0]]
 
 
-set_case_analysis 0 [get_ports pipe_stages[0]]
-set_case_analysis 0 [get_ports pipe_stages[1]]
-set_case_analysis 0 [get_ports pipe_stages[2]]
-
-
+set_case_analysis 0 [get_ports piped_final_addition]
 report_checks -path min 
 
-
-set_case_analysis 1 [get_ports pipe_stages[0]]
-set_case_analysis 0 [get_ports pipe_stages[1]]
-set_case_analysis 0 [get_ports pipe_stages[2]]
-
-
-
+set_case_analysis 1 [get_ports piped_final_addition]
 report_checks -path min 
 
-
-set_case_analysis 0 [get_ports pipe_stages[0]]
-set_case_analysis 1 [get_ports pipe_stages[1]]
-set_case_analysis 0 [get_ports pipe_stages[2]]
-
-
-report_checks -path min 
-
-
-set_case_analysis 1 [get_ports pipe_stages[0]]
-set_case_analysis 1 [get_ports pipe_stages[1]]
-set_case_analysis 0 [get_ports pipe_stages[2]]
-
-report_checks -path min 
-
-
-set_case_analysis 0 [get_ports pipe_stages[0]]
-set_case_analysis 0 [get_ports pipe_stages[1]]
-set_case_analysis 1 [get_ports pipe_stages[2]]
-
-report_checks -path min 
-
-unset_case_analysis [get_ports pipe_stages[0]]
-unset_case_analysis [get_ports pipe_stages[1]]
-unset_case_analysis [get_ports pipe_stages[2]]
+unset_case_analysis [get_ports piped_final_addition]
