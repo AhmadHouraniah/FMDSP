@@ -1,7 +1,7 @@
 #make simulate N=16 M=16
 
 # Default values for N and M
-WIDTH ?= 17
+WIDTH ?= 33
 
 # Calculating N2 and M2 as N/2 + 1 and M/2 + 1
 WIDTH2 := $(shell echo $$(($(WIDTH)/2 + 1)))
@@ -21,3 +21,26 @@ simulate_modelsim: generate_PPM
 	vsim tb -c -do "run -all"
 
 .PHONY: simulate generate_PPM
+
+.PHONY: harden
+harden: generate_PPM
+
+	rm -rf ../OpenLane/designs/FB42DSP/
+	rsync -av --exclude 'runs' --exclude 'tb.v' ../FB42DSP ../OpenLane/designs/
+	cp ../cells/*.v ../OpenLane/designs/FB42DSP/
+
+	docker run --rm \
+		-v $(HOME):$(HOME) \
+		-v $(shell pwd)/../OpenLane:/openlane \
+		-v $(shell pwd)/../empty:/openlane/install \
+		-v $(HOME)/.volare:$(HOME)/.volare \
+		-e PDK_ROOT=$(HOME)/.volare \
+		-e PDK=sky130A \
+		--user $(shell id -u):$(shell id -g) \
+		-e DISPLAY=$(DISPLAY) \
+		-v /tmp/.X11-unix:/tmp/.X11-unix \
+		-v $(HOME)/.Xauthority:/root/.Xauthority \
+		--network host \
+		--security-opt seccomp=unconfined \
+		efabless/openlane:latest-amd64 \
+		sh -c "./flow.tcl -design FB42DSP"

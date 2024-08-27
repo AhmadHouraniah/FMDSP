@@ -25,8 +25,9 @@ simulate_modelsim: generate_PPM
 
 .PHONY: harden
 harden:
+	rm -rf ../OpenLane/designs/FB32DSP/
 	rsync -av --exclude 'runs' ../FB32DSP ../OpenLane/designs/
-	rsync -av ../cells ../OpenLane/designs/FB32DSP/
+	cp ../cells/*.v ../OpenLane/designs/FB32DSP/
 
 	docker run --rm \
 		-v $(HOME):$(HOME) \
