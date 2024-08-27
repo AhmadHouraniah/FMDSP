@@ -12,3 +12,4 @@ module ha
 	assign c = a & b;
 
 endmodule
+

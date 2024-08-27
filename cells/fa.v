@@ -16,3 +16,4 @@ module fa
 	assign c_o = c_1 | c_2;
 
 endmodule
+

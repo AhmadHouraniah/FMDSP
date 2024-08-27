@@ -22,6 +22,7 @@ module compressor42(in1, in2, in3, in4, out1, out2);
    input [NN-1:0] in1, in2, in3, in4;
    output [NN:0] out1, out2;
    wire [NN-1:0] l1, l2;
+   wire nc1, nc2;
 
    compressor32 #(NN) comp1 (in1, in2, in3, {nc1, l1}, {nc2,l2});
    compressor32 #(NN) comp2 (l1, l2, in4, out1, out2);
