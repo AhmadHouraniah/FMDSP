@@ -1,9 +1,13 @@
 `timescale 1ns / 1ps
 
 module tb;
-
+`ifdef WIDTH
     parameter WIDTH = `WIDTH;
     parameter PPM_TYPE = `PPM_TYPE;
+`else
+    parameter WIDTH = 33;
+    parameter PPM_TYPE = 0;
+`endif
     parameter SHIFT_BITS = 2;
     parameter testCount = 200;
     parameter clkLength = 5;

@@ -30,7 +30,7 @@ module DSP_top(clk, start, aa, bb, cc, shift_amount, shift_dir, mode, out, mac);
     
     wire [WIDTH2+WIDTH2+2:0] mult_out1, mult_out2;
 
-    PPM #(WIDTH2+1, WIDTH2+1, PPM_TYPE) PPM (.a(mult_in1), .b(mult_in2), .out1(mult_out1), .out2(mult_out2));
+    PPM #(WIDTH2+1, WIDTH2+1, 0) PPM (.a(mult_in1), .b(mult_in2), .out1(mult_out1), .out2(mult_out2));
 
     reg [$clog2(WIDTH):0] shift_val;
 
