@@ -2,8 +2,6 @@ module DSP_model #(
     parameter WIDTH = 16,
     parameter PPM_TYPE = 0,
     parameter SHIFT_BITS = 2,
-    parameter PIPE_STAGE_WIDTH = 2,
-    parameter PIPELINE_BITS = 3,
     localparam WIDTH2 = WIDTH / 2
 )(
     input shift_enable,
@@ -17,7 +15,7 @@ module DSP_model #(
     input shift_dir,
     input [1:0] mode,
     input mac,
-    input [PIPELINE_BITS-1:0] pipe_stages,
+    input piped_final_addition,
     output compare_res,
     output signed [2*WIDTH-1:0] out
 );
@@ -91,23 +89,21 @@ module DSP_model #(
         start_r3 <= start_r2;
     end
 
-    shift_register #(
-        .WIDTH(2*WIDTH),
-        .PIPELINE_BITS(PIPELINE_BITS)
+    shift_register_with_bypass #(
+        .WIDTH(2*WIDTH)
     ) shift_register_inst (
         .clk(clk),
         .data_in(out_wire),
-        .depth(shift_enable? {PIPELINE_BITS{1'b0}} : pipe_stages),
+        .piped(~shift_enable & piped_final_addition),
         .data_out(out)
     );
 
-    shift_register #(
-        .WIDTH(1),
-        .PIPELINE_BITS(PIPELINE_BITS)
+    shift_register_with_bypass #(
+        .WIDTH(1)
     ) shift_register_inst_2 (
         .clk(clk),
         .data_in(compare_res_next),
-        .depth(shift_enable? {PIPELINE_BITS{1'b0}} : pipe_stages),
+        .piped(~shift_enable & piped_final_addition),
         .data_out(compare_res)
     );
 endmodule

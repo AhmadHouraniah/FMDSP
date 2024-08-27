@@ -1,251 +1,153 @@
 module final_addition
 #(
-    parameter WIDTH = 16,
-    parameter PIPE_STAGE_WIDTH = 2,
-    parameter PIPELINE_BITS = 3
+    parameter WIDTH = 16
 )
 (
     input   wire [WIDTH-1:0] in1,    // First input operand
     input   wire [WIDTH-1:0] in2,    // Second input operand
     input   wire clk,                // Clock signal
-    input   wire [PIPELINE_BITS-1:0] pipes, // Number of pipeline stages (1 to 4)
-    output  wire [WIDTH-1:0] out     // Sum output
+    input   wire piped, // Number of pipeline stages (1 to 4)
+    output  wire [WIDTH:0] out     // Sum output
 );
-    localparam MAX_PIPES = 4;
-    reg [WIDTH/PIPE_STAGE_WIDTH - 1 : 0] pipeline_enable;
-    wire [WIDTH/PIPE_STAGE_WIDTH : 0] carry;
-    
-    assign carry[0] = 1'b0;
 
-    wire [WIDTH-1:0] in1_sr [WIDTH/PIPE_STAGE_WIDTH  :0];
-    wire [WIDTH-1:0] in2_sr [WIDTH/PIPE_STAGE_WIDTH  :0];
+    localparam WIDTH4 = (WIDTH + 3) / 4; //ceil
+
+    wire [WIDTH4-1:0] adder1_in1_r, adder2_in1_r, adder3_in1_r, adder4_in1_r;
+    wire [WIDTH4-1:0] adder1_in2_r, adder2_in2_r, adder3_in2_r, adder4_in2_r;
+    wire [WIDTH4-1:0] sum1, sum2, sum3, sum4;
+    wire carry_out1, carry_out2, carry_out3, carry_out4;
+    wire [WIDTH:0] out_reg;
+
+    wire [WIDTH4-1:0] adder1_in1 = in1[1*WIDTH4-1:0*WIDTH4];
+    wire [WIDTH4-1:0] adder2_in1 = in1[2*WIDTH4-1:1*WIDTH4];
+    wire [WIDTH4-1:0] adder3_in1 = in1[3*WIDTH4-1:2*WIDTH4];
+    wire [WIDTH4-1:0] adder4_in1 = in1[WIDTH-1:3*WIDTH4];
+
+    wire [WIDTH4-1:0] adder1_in2 = in2[1*WIDTH4-1:0*WIDTH4];
+    wire [WIDTH4-1:0] adder2_in2 = in2[2*WIDTH4-1:1*WIDTH4];
+    wire [WIDTH4-1:0] adder3_in2 = in2[3*WIDTH4-1:2*WIDTH4];
+    wire [WIDTH4-1:0] adder4_in2 = in2[WIDTH-1:3*WIDTH4];
+
+    wire carry_in1 = 1'b0;
+    wire carry_in2 = carry_out1;
+    wire carry_in3 = carry_out2;
+    wire carry_in4 = carry_out3;
     
-    assign in1_sr[0] = in1;
-    assign in2_sr[0] = in2;
+    adder #(WIDTH4) adder1 (.in1(piped ? adder1_in1_r : adder1_in1), .in2(piped? adder1_in2_r : adder1_in2), .carry_in(piped? carry_in1_r : carry_in1), .out(sum1), .carry_out(carry_out1)); 
+    adder #(WIDTH4) adder2 (.in1(piped ? adder2_in1_r : adder2_in1), .in2(piped? adder2_in2_r : adder2_in2), .carry_in(piped? carry_in2_r : carry_in2), .out(sum2), .carry_out(carry_out2)); 
+    adder #(WIDTH4) adder3 (.in1(piped ? adder3_in1_r : adder3_in1), .in2(piped? adder3_in2_r : adder3_in2), .carry_in(piped? carry_in3_r : carry_in3), .out(sum3), .carry_out(carry_out3)); 
+    adder #(WIDTH4) adder4 (.in1(piped ? adder4_in1_r : adder4_in1), .in2(piped? adder4_in2_r : adder4_in2), .carry_in(piped? carry_in4_r : carry_in4), .out(sum4), .carry_out(carry_out4)); 
+
+    shift_register #(1, 0) shift_register_carry1  (.clk(clk), .in(carry_in1), .out(carry_in1_r));
+    shift_register #(1, 1) shift_register_carry2  (.clk(clk), .in(carry_in2), .out(carry_in2_r));
+    shift_register #(1, 1) shift_register_carry3  (.clk(clk), .in(carry_in3), .out(carry_in3_r));
+    shift_register #(1, 1) shift_register_carry4  (.clk(clk), .in(carry_in4), .out(carry_in4_r));
+
+    shift_register #(1, 0) shift_register_carry5  (.clk(clk), .in(carry_out4), .out(out_reg[WIDTH]));
+
+    shift_register #(WIDTH4, 0) shift_register_in_1_1  (.clk(clk), .in(adder1_in1), .out(adder1_in1_r));
+    shift_register #(WIDTH4, 1) shift_register_in_1_2  (.clk(clk), .in(adder2_in1), .out(adder2_in1_r));
+    shift_register #(WIDTH4, 2) shift_register_in_1_3  (.clk(clk), .in(adder3_in1), .out(adder3_in1_r));
+    shift_register #(WIDTH4, 3) shift_register_in_1_4  (.clk(clk), .in(adder4_in1), .out(adder4_in1_r));
+
+    shift_register #(WIDTH4, 0) shift_register_in_2_1  (.clk(clk), .in(adder1_in2), .out(adder1_in2_r));
+    shift_register #(WIDTH4, 1) shift_register_in_2_2  (.clk(clk), .in(adder2_in2), .out(adder2_in2_r));
+    shift_register #(WIDTH4, 2) shift_register_in_2_3  (.clk(clk), .in(adder3_in2), .out(adder3_in2_r));
+    shift_register #(WIDTH4, 3) shift_register_in_2_4  (.clk(clk), .in(adder4_in2), .out(adder4_in2_r));
+
+    shift_register #(WIDTH4, 3) shift_register_out_1 (.clk(clk), .in(sum1), .out(out_reg[WIDTH4-1:0]));
+    shift_register #(WIDTH4, 2) shift_register_out_2 (.clk(clk), .in(sum2), .out(out_reg[2*WIDTH4-1:WIDTH4]));
+    shift_register #(WIDTH4, 1) shift_register_out_3 (.clk(clk), .in(sum3), .out(out_reg[3*WIDTH4-1:2*WIDTH4]));
+    wire [4*WIDTH4 - WIDTH -1 : 0] nc ;
+    shift_register #(WIDTH4, 0) shift_register_out_4 (.clk(clk), .in(sum4), .out({nc, out_reg[WIDTH-1:3*WIDTH4]}));
+
+    assign out = piped? out_reg : {carry_out4, sum4, sum3, sum2, sum1};
+
+endmodule
+
+
+module adder(in1, in2, carry_in, out, carry_out);
+    parameter WIDTH = 4;
+
+    input [WIDTH-1:0] in1, in2;
+    input carry_in;
+    output [WIDTH-1:0] out;
+    output carry_out;
+
+    assign {carry_out, out} = in1 + in2 + carry_in; 
+
+endmodule
+
+module shift_register(clk, in, out);
+
+    parameter WIDTH = 4;
+    parameter DEPTH = 4;
+
+    input clk;
+    input [WIDTH-1:0] in;
+    output [WIDTH-1:0] out;
+
+    wire [WIDTH-1:0] registers [0:DEPTH];
 
     generate
-        genvar ii;
-        for(ii = 0; ii < WIDTH; ii = ii + PIPE_STAGE_WIDTH) begin : ADD_STAGE
-            final_addition_stage #(.WIDTH(PIPE_STAGE_WIDTH), .SR_WIDTH(WIDTH)) stage (
-                .in1(in1_sr[ii/PIPE_STAGE_WIDTH]), 
-                .in2(in2_sr[ii/PIPE_STAGE_WIDTH]), 
-                .in1_sr(in1_sr[1+ii/PIPE_STAGE_WIDTH]), 
-                .in2_sr(in2_sr[1+ii/PIPE_STAGE_WIDTH]),
-                .carry_in(carry[ii / PIPE_STAGE_WIDTH]), 
-                .out(out[ii +: PIPE_STAGE_WIDTH]),
-                .carry_out(carry[(ii / PIPE_STAGE_WIDTH) + 1]), 
-                .clk(clk), 
-                .pipelined(pipeline_enable[ii / PIPE_STAGE_WIDTH])
-            );
+        genvar i;
+        assign registers[0] = in;
+        for(i = 0; i< DEPTH; i = i+1) begin
+            flop #(WIDTH) flop_instance (.clk(clk), .in(registers[i]), .out(registers[i+1]));
         end
-    endgenerate
+        assign out = registers[DEPTH];
+    endgenerate 
 
-    integer jj;
-    reg [PIPELINE_BITS-1:0] pipes_inv;
-    always @(*) begin
-        case(pipes)
-            1: pipes_inv = 4;
-            2: pipes_inv = 3;
-            3: pipes_inv = 2;
-            4: pipes_inv = 1;
-            default: pipes_inv= pipes;
-        endcase
-        pipeline_enable = 8'b0; // Default to all zeros
-        for (jj = 0; jj < WIDTH / PIPE_STAGE_WIDTH; jj = jj + 1) begin
-            pipeline_enable[WIDTH / PIPE_STAGE_WIDTH -1 - jj] = jj%(pipes_inv)==0 & pipes_inv!=0;
-        end
-        pipeline_enable[WIDTH / PIPE_STAGE_WIDTH -1] = 1'b0;
+endmodule
+
+`ifdef SIM_FINAL_ADDITION
+module tb();
+
+    parameter WIDTH = 16;
+    reg [WIDTH-1:0] A, B;
+    wire [WIDTH:0] sum;
+    reg clk = 0;
+    reg piped;
+
+    always #5 clk = ~clk;
+
+    final_addition #(WIDTH) fa (.in1(A), .in2(B), .clk(clk), .piped(piped), .out(sum));
+
+    initial begin
+        $dumpvars;
+        #1;
+        A = 10;
+        B = 20;
+        piped = 0;
+        #50;
+
+
+        A = $random;
+        B = $random;
+        piped = 1;
+        #10;
+        A = $random;
+        B = $random;
+        piped = 1;
+        #10;
+        A = $random;
+        B = $random;
+        piped = 1;
+        #10;
+        A = $random;
+        B = $random;
+        piped = 1;
+        #10;
+        A = $random;
+        B = $random;
+        piped = 1;
+        #10;
+        A = $random;
+        B = $random;
+        piped = 1;
+        #10;
+        #30;
+        $finish;
     end
 endmodule
-
-module final_addition_stage
-#(
-    parameter SR_WIDTH = 16,
-    parameter WIDTH = 2
-)
-(
-    input [SR_WIDTH-1:0] in1,
-    input [SR_WIDTH-1:0] in2,
-    input clk,
-    input pipelined,
-    input carry_in,
-    output carry_out,
-    output [WIDTH-1:0] out,
-    output [SR_WIDTH -1 :0] in1_sr,
-    output [SR_WIDTH -1 :0] in2_sr    
-);
-
-    wire [WIDTH:0] carry;
-    assign carry[0] = carry_in;
-    wire [WIDTH-1:0] sum;
-    wire [WIDTH-1:0] sum_r;
-    wire c_o_r;
-
-    generate
-        genvar ii;
-        for (ii = 0; ii < WIDTH; ii = ii + 1) begin : FA
-            fa fa_inst (
-                .a(in1[ii]), 
-                .b(in2[ii]), 
-                .c_i(carry[ii]), 
-                .s(sum[ii]), 
-                .c_o(carry[ii + 1])
-            );
-        end
-    endgenerate
-
-    flop #(WIDTH) flop_sum (
-        .in(sum), 
-        .clk(clk), 
-        .out(sum_r)
-    );
-
-    flop #(1) flop_c_o (
-        .in(carry[WIDTH]), 
-        .clk(clk), 
-        .out(c_o_r)
-    );
-
-    wire [SR_WIDTH-WIDTH -1 :0] in1_sr_reg;
-
-    flop #(SR_WIDTH-WIDTH ) flop_in1_sr (
-        .in(in1[SR_WIDTH -1 :WIDTH]), 
-        .clk(clk), 
-        .out(in1_sr_reg)
-    );
-
-    wire [SR_WIDTH-WIDTH -1 :0] in2_sr_reg;
-    
-    flop #(SR_WIDTH-WIDTH ) flop_in2_sr (
-        .in(in2[SR_WIDTH -1 :WIDTH]), 
-        .clk(clk), 
-        .out(in2_sr_reg)
-    );
-
-    assign in1_sr[SR_WIDTH-WIDTH -1 :0]  = pipelined ? in1_sr_reg : in1[SR_WIDTH -1 : WIDTH];
-    assign in2_sr[SR_WIDTH-WIDTH -1 :0]  = pipelined ? in2_sr_reg : in2[SR_WIDTH -1 : WIDTH];
-    assign in1_sr[SR_WIDTH -1 :SR_WIDTH-WIDTH] = 0;
-    assign in2_sr[SR_WIDTH -1 :SR_WIDTH-WIDTH] = 0;
-    
-    assign out = pipelined ? sum_r : sum;
-    assign carry_out = pipelined ? c_o_r : carry[WIDTH];
-
-endmodule
-
-
-//
-//module tb_final_addition;
-//
-//    parameter WIDTH = 16;
-//    parameter PIPELINE_BITS = 3;
-//
-//    // Inputs
-//    reg [WIDTH-1:0] in1;
-//    reg [WIDTH-1:0] in2;
-//    reg clk;
-//    reg [PIPELINE_BITS-1:0] pipes;
-//
-//    // Outputs
-//    wire [WIDTH-1:0] out;
-//
-//    // Instantiate the Unit Under Test (UUT)
-//    final_addition #(
-//        .WIDTH(WIDTH),
-//        .PIPELINE_BITS(PIPELINE_BITS)
-//    ) uut (
-//        .in1(in1),
-//        .in2(in2),
-//        .clk(clk),
-//        .pipes(pipes),
-//        .out(out)
-//    );
-//
-//    // Clock generation
-//    initial begin
-//        clk = 0;
-//        forever #5 clk = ~clk; // 100MHz clock
-//    end
-//    integer ii;
-//    // Stimulus
-//    initial begin
-//        $dumpvars;
-//        // Initialize Inputs
-//        in1 = 0;
-//        in2 = 0;
-//        pipes = 0;
-//
-//        // Wait for the global reset
-//        #11;
-//
-//        // Apply test vectors
-//        // Test case 1
-//        pipes = 0;
-//        in1 = 1;
-//        in2 = 2;
-//        #1;
-//        if(in1+in2 == out)
-//            $display("Correct! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);
-//        else
-//            $display("Error! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);
-//        #100;
-//
-//        // Test case 2
-//        pipes = 1;
-//        in1 = 2500;
-//        in2 = 7850;
-//        #20;
-//        if(in1+in2 == out)
-//            $display("Correct! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);
-//        else
-//            $display("Error! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);        #100;
-//
-//
-//        // Test case 3
-//        pipes = 2;
-//        in1 = 789;
-//        in2 = 4562;
-//        #40;
-//        if(in1+in2 == out)
-//            $display("Correct! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);
-//        else
-//            $display("Error! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);        #100;
-//
-//        // Test case 4
-//        pipes = 3;
-//        in1 = 4562;
-//        in2 = 4544;
-//        #80;
-//        if(in1+in2 == out)
-//            $display("Correct! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);
-//        else
-//            $display("Error! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);        // Finish simulation
-//        #100;
-//
-//
-//
-//        pipes = 4;
-//        in1 = 4562;
-//        in2 = 4544;
-//        #160;
-//        if(in1+in2 == out)
-//            $display("Correct! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);
-//        else
-//            $display("Error! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);        // Finish simulation
-//        #100;
-//
-//        
-//        for(ii=0; ii<50; ii= ii+1) begin
-//            pipes = $urandom_range(0, 3);
-//            in1 = $random;
-//            in2 = $random;
-//            #(pipes*10);
-//            if(in1+in2 == out)
-//                $display("Correct! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);
-//            else
-//                $display("Error! Test Case 1: in1 = %d, in2 = %d, pipes = %d, out = %d", in1, in2, pipes, out);        // Finish simulation
-//        end
-//        #100;
-//        $finish;
-//    end
-//
-//endmodule
+`endif 

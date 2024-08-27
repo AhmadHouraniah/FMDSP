@@ -1,13 +1,11 @@
-module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, shift_dir, mode, out, mac,  pipe_stages);
+module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, shift_dir, mode, out, mac,  piped_final_addition);
     parameter WIDTH = 33;
         localparam WIDTH2 = WIDTH/2; //16
     parameter PPM_TYPE = 0; //0: wallace, 1: dadda
 
     parameter SHIFT_BITS = 2;
-    parameter PIPE_STAGE_WIDTH = 2;
-    parameter PIPELINE_BITS = 3;
 
-    input [PIPELINE_BITS-1:0] pipe_stages;
+    input piped_final_addition;
     input [SHIFT_BITS-1:0] shift_amount;
     input shift_dir;
     input shift_enable;
@@ -105,8 +103,9 @@ module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, shift_di
     wire nc1, nc2;
     compressor42 #(2*WIDTH) comp ( comp_in1, comp_in2, comp_in3, comp_in4, {nc1,comp_out1}, {nc2,comp_out2});
 
-    assign out = comp_out1 + comp_out2;
-    //final_addition #(.WIDTH(2*WIDTH), .PIPELINE_BITS(3) ) adder (.clk(clk), .rst(rst), .in1(comp_out1), .in2(comp_out2), .pipes(shift_enable? 3'b0 : pipe_stages), .out(out));
+    //assign out = comp_out1 + comp_out2;
+    wire nc;
+    final_addition #(.WIDTH(2*WIDTH)) adder (.clk(clk), .in1(comp_out1), .in2(comp_out2), .piped(piped_final_addition &! shift_enable), .out({nc, out}));
 
 endmodule
 
