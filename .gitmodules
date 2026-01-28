@@ -1,6 +1,7 @@
 [submodule "mult-tree"]
 	path = mult-tree
 	url = git@github.com:AhmadHouraniah/mult-tree.git
+	branch = master
 [submodule "OpenLane"]
 	path = OpenLane
 	url = https://github.com/efabless/openlane.git
