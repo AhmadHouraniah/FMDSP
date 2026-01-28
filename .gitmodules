@@ -3,4 +3,4 @@
 	url = git@github.com:AhmadHouraniah/mult-tree.git
 [submodule "OpenLane"]
 	path = OpenLane
-	url = https://github.com/The-OpenROAD-Project/OpenLane.git
+	url = https://github.com/efabless/openlane.git

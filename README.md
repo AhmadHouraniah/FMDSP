@@ -39,3 +39,20 @@ make simulate
 ```
 
 This will automatically build the `generate_PPM` tool from the `mult-tree` submodule and run the simulation using Icarus Verilog.
+
+## PDK Setup
+
+This project uses the SkyWater 130nm PDK. You must install it using Volare.
+If you encounter "Permission denied" errors with `~/.volare`, ensure you own the directory:
+
+```bash
+sudo chown -R $USER:$USER ~/.volare
+```
+
+To install the PDK:
+
+```bash
+make pdk
+```
+
+This will download and install the required PDK version to `~/.volare`.
