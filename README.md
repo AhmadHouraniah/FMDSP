@@ -29,30 +29,30 @@ Parametric Folded DSP block with feedback loop. [Documentation](docs/FB32DSP.md)
 ### FB42DSP
 Parametric Folded DSP block with pipelining support. [Documentation](docs/FB42DSP.md)
 
-## Building and Verification
+## Setup
 
-To run simulations, navigate to the respective verification directory:
+To set up the project (initialize submodules, install PDK, and pull Docker image), run:
+
+```bash
+make
+```
+
+## Usage
+
+### Simulation
+
+To run simulations, for example:
 
 ```bash
 cd verification/FB32DSP
 make simulate
 ```
 
-This will automatically build the `generate_PPM` tool from the `mult-tree` submodule and run the simulation using Icarus Verilog.
+### Implementation
 
-## PDK Setup
-
-This project uses the SkyWater 130nm PDK. You must install it using Volare.
-If you encounter "Permission denied" errors with `~/.volare`, ensure you own the directory:
+To harden the design, for example:
 
 ```bash
-sudo chown -R $USER:$USER ~/.volare
+cd implementation/FB32DSP
+make harden
 ```
-
-To install the PDK:
-
-```bash
-make pdk
-```
-
-This will download and install the required PDK version to `~/.volare`.
