@@ -3,6 +3,8 @@
 ## Overview
 FB32DSP involves a feedback loop, making it simple and efficient. However, the operating frequency is limited by this loop.
 
+![FB32DSP Architecture](figures/FB32DSP.png)
+
 This is a parametric Folded DSP design. The width `N` is configurable (must be odd).
 
 ## Supported Operations
@@ -21,5 +23,5 @@ This is a parametric Folded DSP design. The width `N` is configurable (must be o
 *Note: In the examples above, `N` refers to the parametric width.*
 
 ## Features
-- **Barrel Shifter**: Built-in barrel shifter for setting direction and bits to be shifted during MAC operations.
+- **Barrel Shifter**: Built-in barrel shifter for MAC operations.
 - **Constraints**: N should be an odd number (e.g., 33).
