@@ -1,4 +1,4 @@
-module DSP_top(clk, start, aa, bb, cc, shift_amount, shift_dir, mode, out, mac);
+module DSP_top(clk, start, aa, bb, cc, shift_amount, mode, out, mac);
     parameter WIDTH = 33;
         localparam WIDTH2 = WIDTH/2; //16
     parameter PPM_TYPE = 0; //0: wallace, 1: dadda
@@ -6,7 +6,6 @@ module DSP_top(clk, start, aa, bb, cc, shift_amount, shift_dir, mode, out, mac);
     parameter SHIFT_BITS = 2;
 
     input [SHIFT_BITS-1:0] shift_amount;
-    input shift_dir;
     input [WIDTH-1:0] aa;
     input [WIDTH-1:0] bb;
     input [2*WIDTH-1:0] cc;
@@ -85,7 +84,7 @@ module DSP_top(clk, start, aa, bb, cc, shift_amount, shift_dir, mode, out, mac);
 
     wire [2*WIDTH-1:0] comp_in3 =  start? mac&mac_prev? outPrevShifted: cc : outPrev ;
     
-    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter2(.data_in(outPrev), .shift_amount(shift_amount), .direction(shift_dir), .data_out(outPrevShifted));
+    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter2(.data_in(outPrev), .shift_amount(shift_amount), .data_out(outPrevShifted));
 
     compressor32 #(2*WIDTH) comp ( comp_in1, comp_in2, comp_in3, {nc1, comp_out1}, {nc2, comp_out2});
     assign out = comp_out1 + comp_out2;

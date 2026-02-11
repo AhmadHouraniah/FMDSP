@@ -9,7 +9,6 @@ module DSP_model #(
     input [WIDTH-1:0] bb,
     input [2*WIDTH-1:0] cc,
     input [SHIFT_BITS-1:0] shift_amount,
-    input shift_dir,
     input [1:0] mode,
     input mac,
     output reg compare_res,
@@ -32,10 +31,7 @@ module DSP_model #(
                 if (start) begin
                     res0 = $signed(aa[WIDTH2:0]) * $signed(bb[WIDTH2:0]);
                     if (mac & mac_prev) begin
-                        if (shift_dir)
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
-                        else
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                        out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >>> shift_amount);
                     end else
                         out_wire = res0 + cc;
                 end else
@@ -45,10 +41,7 @@ module DSP_model #(
                 if (start) begin
                     res0 = $signed(aa[WIDTH2:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
-                        if (shift_dir)
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
-                        else
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                        out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >>> shift_amount);
                     end else
                         out_wire = res0 + cc;
                 end
@@ -57,10 +50,7 @@ module DSP_model #(
                 if (start) begin
                     res0 = $signed(aa[WIDTH-1:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
-                        if (shift_dir)
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
-                        else
-                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                        out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >>> shift_amount);
                     end else
                         out_wire = res0 + cc;
                 end
