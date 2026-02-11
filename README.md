@@ -7,8 +7,8 @@ Open-source DSP Block IP Generator intended for FPGAs.
 The project is organized into the following sections:
 
 - **design/**: Contains the Verilog source code for the DSP designs and shared cells.
-  - `FB32DSP/`: 32-bit DSP design.
-  - `FB42DSP/`: 42-bit DSP design.
+  - `FB32DSP/`: Area-efficient DSP Block.
+  - `FB42DSP/`: High-performance DSP Block.
   - `cells/`: Shared arithmetic components (adders, multipliers, etc.).
   
 - **verification/**: Contains testbenches and Makefiles for simulation.
