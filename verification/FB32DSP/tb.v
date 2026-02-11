@@ -25,7 +25,6 @@ module tb;
     reg [WIDTH-1:0] bb;
     reg [WIDTH+WIDTH-1:0] cc;
     reg mac;
-    reg shift_dir = 0;
 
     wire [WIDTH+WIDTH-1:0] model_out;
     wire [WIDTH+WIDTH-1:0] out;
@@ -42,7 +41,6 @@ module tb;
         .mode(mode),
         .out(out),
         .shift_amount(barrel_shifter),
-        .shift_dir(shift_dir),
         .mac(mac),
         .cc(cc),
         .aa(aa),
@@ -60,7 +58,6 @@ module tb;
         .mode(mode),
         .out(model_out),
         .shift_amount(barrel_shifter),
-        .shift_dir(shift_dir),
         .mac(mac),
         .cc(cc),
         .aa(aa),
@@ -131,11 +128,9 @@ module tb;
                 start = 1;
 				if(shift) begin
 					barrel_shifter = $random;
-					shift_dir = $random;
 				end
 				else begin
 					barrel_shifter = 0;
-					shift_dir = 0;
 				end
 				if(multiply_add)
 					cc = $random;
@@ -173,9 +168,9 @@ module tb;
 			mac = 0;
             #100;
             if (error_count == 0)
-                $display("%s | Shift %d %d | Passed", mode_name, shift_dir, barrel_shifter);
+                $display("%s | Shift %d | Passed", mode_name, barrel_shifter);
             else
-                $display("%s | Shift %d %d | Failed with %d errors", mode_name, shift_dir, barrel_shifter, error_count);
+                $display("%s | Shift %d | Failed with %d errors", mode_name, barrel_shifter, error_count);
             error_count = 0;
         end
     endtask
