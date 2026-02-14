@@ -23,4 +23,4 @@ docker-pull: submodules
 .PHONY: clean
 clean:
 	$(MAKE) -C verification/FB32DSP clean
-	$(MAKE) -C verification/FB42DSP clean
+	$(MAKE) -C verification/FF42DSP clean

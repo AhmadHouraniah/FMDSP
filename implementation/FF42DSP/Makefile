@@ -4,12 +4,12 @@ OPENLANE_IMAGE = ghcr.io/the-openroad-project/openlane:$(OPENLANE_TAG)-amd64
 
 .PHONY: harden
 harden:
-	$(MAKE) -C ../../verification/FB42DSP generate_PPM
-	rm -rf ../../OpenLane/designs/FB42DSP/
-	mkdir -p ../../OpenLane/designs/FB42DSP/
-	cp ../../design/FB42DSP/*.v ../../OpenLane/designs/FB42DSP/
-	cp ./* ../../OpenLane/designs/FB42DSP/
-	cp ../../design/cells/*.v ../../OpenLane/designs/FB42DSP/
+	$(MAKE) -C ../../verification/FF42DSP generate_PPM
+	rm -rf ../../OpenLane/designs/FF42DSP/
+	mkdir -p ../../OpenLane/designs/FF42DSP/
+	cp ../../design/FF42DSP/*.v ../../OpenLane/designs/FF42DSP/
+	cp ./* ../../OpenLane/designs/FF42DSP/
+	cp ../../design/cells/*.v ../../OpenLane/designs/FF42DSP/
 
 	docker run --rm \
 		-v $(HOME):$(HOME) \
@@ -25,8 +25,8 @@ harden:
 		--network host \
 		--security-opt seccomp=unconfined \
 		$(OPENLANE_IMAGE) \
-		sh -c "./flow.tcl -design FB42DSP"
+		sh -c "./flow.tcl -design FF42DSP"
 
 .PHONY: clean
 clean:
-	rm -rf ../../OpenLane/designs/FB42DSP/
+	rm -rf ../../OpenLane/designs/FF42DSP/
