@@ -103,7 +103,10 @@ module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, mode, ou
 
     //assign out = comp_out1 + comp_out2;
     wire nc;
-    final_addition #(.WIDTH(2*WIDTH)) adder (.clk(clk), .in1(comp_out1), .in2(comp_out2), .piped(piped_final_addition &! shift_enable), .out({nc, out}));
+    wire [2*WIDTH-1:0] adder_in1, adder_in2;
+    assign adder_in1 = (piped_final_addition & !shift_enable) ? comp_out1_r1: comp_out1;
+    assign adder_in2 = (piped_final_addition & !shift_enable) ? comp_out2_r1: comp_out2;
+    final_addition #(.WIDTH(2*WIDTH)) adder (.clk(clk), .in1(adder_in1), .in2(adder_in2), .piped(piped_final_addition &! shift_enable), .out({nc, out}));
 
 endmodule
 

@@ -83,7 +83,7 @@ module DSP_model #(
     wire [2*WIDTH-1:0] out_r;
     shift_register #(
         .WIDTH(2*WIDTH), 
-        .DEPTH(3)
+        .DEPTH(4)
     ) shift_register_inst (
         .clk(clk),
         .in(out_wire),
@@ -93,7 +93,7 @@ module DSP_model #(
     wire compare_res_r;
     shift_register #(
         .WIDTH(1), 
-        .DEPTH(3)
+        .DEPTH(4)
     ) shift_register_inst_2 (
         .clk(clk),
         .in(compare_res_next),
