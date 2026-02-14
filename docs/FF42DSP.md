@@ -1,7 +1,7 @@
 # FF42DSP Documentation
 
 ## Overview
-TBD
+![FF42DSP Block Diagram](figures/FF42DSP.png)
 
 This is a parametric Folded DSP design. The width `N` is configurable (must be odd).
 
