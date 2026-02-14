@@ -8,16 +8,16 @@ The project is organized into the following sections:
 
 - **design/**: Contains the Verilog source code for the DSP designs and shared cells.
   - `FB32DSP/`: Area-efficient DSP Block.
-  - `FB42DSP/`: High-performance DSP Block.
+  - `FF42DSP/`: High-performance DSP Block.
   - `cells/`: Shared arithmetic components (adders, multipliers, etc.).
   
 - **verification/**: Contains testbenches and Makefiles for simulation.
   - `FB32DSP/`: Verification environment for FB32DSP.
-  - `FB42DSP/`: Verification environment for FB42DSP.
+  - `FF42DSP/`: Verification environment for FF42DSP.
   
 - **implementation/**: Contains configuration files for OpenLane flow.
   - `FB32DSP/`: OpenLane config, pin order, and timing constraints.
-  - `FB42DSP/`: OpenLane config, pin order, and timing constraints.
+  - `FF42DSP/`: OpenLane config, pin order, and timing constraints.
 
 - **mult-tree/**: Submodule for generating partial product reduction trees.
 
@@ -26,8 +26,8 @@ The project is organized into the following sections:
 ### FB32DSP
 Parametric Folded DSP block with feedback loop. [Documentation](docs/FB32DSP.md)
 
-### FB42DSP
-Parametric Folded DSP block with pipelining support. [Documentation](docs/FB42DSP.md)
+### FF42DSP
+Parametric Folded DSP block with pipelining support. [Documentation](docs/FF42DSP.md)
 
 ## Setup
 
