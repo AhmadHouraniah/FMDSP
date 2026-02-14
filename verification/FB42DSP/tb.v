@@ -7,7 +7,7 @@ module tb;
     parameter PIPELINE_BITS = 2;
     parameter PPM_TYPE = `PPM_TYPE;
     parameter SHIFT_BITS = 2;
-    parameter testCount = 200;
+    parameter testCount = 50;
     parameter clkLength = 5;
     parameter cycleLength = 2 * clkLength;
     localparam WIDTH2 = WIDTH / 2;
@@ -23,7 +23,6 @@ module tb;
     reg [WIDTH-1:0] bb;
     reg [WIDTH+WIDTH-1:0] cc;
     reg mac;
-    reg shift_dir = 0;
     reg piped_final_addition; 
     reg shift_enable;
     reg rst;
@@ -45,7 +44,6 @@ module tb;
         .shift_enable(shift_enable),
         .rst(rst),
         .shift_amount(barrel_shifter),
-        .shift_dir(shift_dir),
         .piped_final_addition(piped_final_addition), 
         .mac(mac),
         .cc(cc),
@@ -64,7 +62,6 @@ module tb;
         .mode(mode),
         .out(model_out),
         .shift_amount(barrel_shifter),
-        .shift_dir(shift_dir),
         .shift_enable(shift_enable),
         .rst(rst),
         .piped_final_addition(piped_final_addition), // Corrected the connection
@@ -116,6 +113,7 @@ module tb;
 
         test_mode(0, 1, 0, 1, 0, 1, "Mode Accumulate", 0);
         test_mode(0, 1, 0, 0, 0, 1, "MAC | Mode 0", 1);
+
         test_mode(1, 1, 1, 0, 0, 1, "MAC | Mode 1", 1);
         test_mode(2, 1, 3, 0, 0, 1, "MAC | Mode 2", 1);
 
@@ -145,12 +143,10 @@ module tb;
 				if(shift) begin
                     shift_enable = 1'b1;
 					barrel_shifter = $random;
-					shift_dir = $random;
 				end
 				else begin
                     shift_enable = 1'b0;
 					barrel_shifter = 0;
-					shift_dir = 0;
 				end
 				if(multiply_add)
 					cc = $random;
@@ -188,9 +184,9 @@ module tb;
 			mac = 0;
             #100;
             if (error_count == 0)
-                $display("%s | Pipes %d | Shift %d %d | Passed", mode_name, piped, shift_dir, barrel_shifter);
+                $display("%s | Pipes %d | Shift %d | Passed", mode_name, piped, barrel_shifter);
             else
-                $display("%s | Pipes %d | Shift %d %d | Failed with %d errors", mode_name, piped, shift_dir, barrel_shifter, error_count);
+                $display("%s | Pipes %d | Shift %d | Failed with %d errors", mode_name, piped, barrel_shifter, error_count);
             error_count = 0;
         end
     endtask

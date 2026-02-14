@@ -1,8 +1,7 @@
 module DSP_model #(
     parameter WIDTH = 16,
     parameter PPM_TYPE = 0,
-    parameter SHIFT_BITS = 2,
-    localparam WIDTH2 = WIDTH / 2
+    parameter SHIFT_BITS = 2
 )(
     input shift_enable,
     input rst,
@@ -12,13 +11,14 @@ module DSP_model #(
     input [WIDTH-1:0] bb,
     input [2*WIDTH-1:0] cc,
     input [SHIFT_BITS-1:0] shift_amount,
-    input shift_dir,
     input [1:0] mode,
     input mac,
     input piped_final_addition,
     output compare_res,
     output signed [2*WIDTH-1:0] out
 );
+
+    localparam WIDTH2 = WIDTH / 2;
 
     reg compare_res_next;
     reg signed [2*WIDTH-1:0] out_wire;
@@ -37,10 +37,7 @@ module DSP_model #(
                     res0 = $signed(aa[WIDTH2:0]) * $signed(bb[WIDTH2:0]);
                     if (mac & mac_prev) begin
                         if(shift_enable)
-                            if (shift_dir)
-                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
-                            else
-                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >>> shift_amount);
                         else
                              out_wire = res0 + outPrev;
                     end else
@@ -53,10 +50,7 @@ module DSP_model #(
                     res0 = $signed(aa[WIDTH2:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
                         if(shift_enable)
-                            if (shift_dir)
-                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
-                            else
-                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >>> shift_amount);
                         else
                              out_wire = res0 + outPrev;
                     end else
@@ -68,10 +62,7 @@ module DSP_model #(
                     res0 = $signed(aa[WIDTH-1:0]) * $signed(bb[WIDTH-1:0]);
                     if (mac & mac_prev) begin
                         if(shift_enable)
-                            if (shift_dir)
-                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >> shift_amount);
-                            else
-                                out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} << shift_amount);
+                            out_wire = res0 + ({{(2*WIDTH){outPrev[2*WIDTH-1]}}, outPrev} >>> shift_amount);
                         else
                              out_wire = res0 + outPrev;
                     end else

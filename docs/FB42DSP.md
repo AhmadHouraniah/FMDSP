@@ -21,4 +21,4 @@ This is a parametric Folded DSP design. The width `N` is configurable (must be o
 
 ## Features
 - **Pipelining**: Supports pipelining the final addition. Number of stages = 2^`pipeline_stages`.
-- **Barrel Shifter**: Included for efficient data manipulation in MAC operations.
+- **Barrel Shifter**: Included for efficient data manipulation in MAC operations (Arithmetic Right Shift only).

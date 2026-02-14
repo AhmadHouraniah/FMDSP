@@ -1,4 +1,4 @@
-module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, shift_dir, mode, out, mac,  piped_final_addition);
+module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, mode, out, mac,  piped_final_addition);
     parameter WIDTH = 33;
         localparam WIDTH2 = WIDTH/2; //16
     parameter PPM_TYPE = 0; //0: wallace, 1: dadda
@@ -7,7 +7,6 @@ module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, shift_di
 
     input piped_final_addition;
     input [SHIFT_BITS-1:0] shift_amount;
-    input shift_dir;
     input shift_enable;
     input [WIDTH-1:0] aa;
     input [WIDTH-1:0] bb;
@@ -93,8 +92,7 @@ module DSP_top(clk, start, rst, aa, bb, cc, shift_enable, shift_amount, shift_di
 
     wire [2*WIDTH-1:0] out_reg;
 
-    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter1(.data_in(out_reg), .shift_amount(shift_amount), .direction(shift_dir), .data_out(shifted_out));
-
+    barrel_shifter #(2*WIDTH, SHIFT_BITS) barrel_shifter1(.data_in(out_reg), .shift_amount(shift_amount), .data_out(shifted_out));
     flop #(2*WIDTH) flop_comp_out1_r1 (.in(rst? 0 :comp_out1), .clk(clk), .out(comp_out1_r1));
     flop #(2*WIDTH) flop_comp_out2_r1 (.in(rst? 0 :comp_out2), .clk(clk), .out(comp_out2_r1));
 
