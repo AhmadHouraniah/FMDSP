@@ -9,5 +9,5 @@
 	path = implementation/--force
 	url = git@github.com:AhmadHouraniah/FMDSP_implementation.git
 [submodule "implementation/FMDSP_implementation"]
-	path = implementation/FMDSP_implementation
+	path = implementation/eda
 	url = git@github.com:AhmadHouraniah/FMDSP_implementation.git
