@@ -5,3 +5,9 @@
 [submodule "OpenLane"]
 	path = OpenLane
 	url = https://github.com/efabless/openlane.git
+[submodule "implementation/--force"]
+	path = implementation/--force
+	url = git@github.com:AhmadHouraniah/FMDSP_implementation.git
+[submodule "implementation/FMDSP_implementation"]
+	path = implementation/FMDSP_implementation
+	url = git@github.com:AhmadHouraniah/FMDSP_implementation.git
